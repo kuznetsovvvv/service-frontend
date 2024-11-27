@@ -1,6 +1,171 @@
 <script>
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { ArrowRightOutline } from 'flowbite-svelte-icons';
+	import { Card, Button, Rating, Badge } from 'flowbite-svelte';
+	import { onDestroy } from 'svelte';
+	import { userStatus } from '../store/store';
+	import { json } from '@sveltejs/kit';
+	import {
+		product1,
+		product2,
+		product3,
+		product4,
+		product5,
+		product6,
+		product7,
+		product8,
+		product9,
+		product10
+	} from './products/products';
+	import {
+		product11,
+		product12,
+		product13,
+		product14,
+		product15,
+		product16,
+		product17,
+		product18,
+		product19,
+		product20
+	} from './products/products';
+
+	let cart = [];
+	let productnames=[];
+	// Функция для добавления товара в корзину
+	function addToCart(productId,productname) {
+		cart = [...cart, productId]; // Создаем новый массив с добавленным ID
+		productnames = [...productnames, productname];
+	}
+
+	function removeFromCart(productId,productname) {
+		const indexToRemove = cart.indexOf(productId);
+		const indextoRemove = productnames.indexOf(productname);
+		if (indexToRemove === -1 && indextoRemove === -1) {
+			return;
+		}
+		productnames.splice(indextoRemove,1);
+		cart.splice(indexToRemove, 1);
+		cart = [...cart];
+		productnames = [...productnames];
+	}
+
+
+
+	let phone = '';
+	let password = '';
+	let register = true;
+	let errorMessage = '';
+	let responce = '';
+
+	$: loggedIn = $userStatus.loggedIn;
+	$: storephone = $userStatus.storephone;
+	const unsubscribe = userStatus.subscribe((value) => {});
+
+	onDestroy(unsubscribe);
+
+	function login_validateForm() {
+		const phoneRegex = /^[+]?\d{11,12}$/;
+
+		if (!phoneRegex.test(phone)) {
+			errorMessage = 'Phone number must be 11 or 12 digits long.';
+			return false;
+		}
+		if (password.length < 1 || password.length > 40) {
+			errorMessage = 'Password must be between 1 and 40 characters long.';
+			return false;
+		}
+
+		return true;
+	}
+
+	async function handleSubmit() {
+		if (!login_validateForm()) return;
+		const Data = {
+			phone: phone,
+			password: password
+		};
+		try {
+			const response = await fetch('http://localhost:18080/api/v1/login', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(Data)
+			});
+
+			if (response.ok) {
+				responce = await response.json();
+				userStatus.setLoggedIn(phone);
+				phone = '';
+				password = '';
+				errorMessage = '';
+				
+
+			} else {
+				const errorData = await response.json();
+				errorMessage = errorData.message || `HTTP error! status: ${response.status}`;
+			}
+		} catch (error) {
+			console.error('Error with login:', error);
+			errorMessage = 'An unexpected error occurred.';
+		}
+	}
+	function registerClicked() {
+		register = !register;
+	}
+
+
+
+
+	let delivery_address = '';
+	let order_error='';
+	function order_validateForm() {
+
+if(cart.length==0){
+	order_error = 'The cart cannot be empty.';
+	return false;
+}
+
+		if (delivery_address.length < 1 || delivery_address.length > 80) {
+			order_error = 'Delivery address must be between 1 and 80 characters long.';
+			return false;
+		}
+
+		return true;
+	}
+
+	async function order_handleSubmit() {
+		if (!order_validateForm()) return;
+		const Data = {
+			delivery_address: delivery_address,
+			products: cart
+		};
+		try {
+			const response = await fetch('http://localhost:18080/api/v1/order', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify(Data)
+			});
+
+			if (response.ok) {
+				responce = await response.json();
+				cart=[];
+				productnames=[];
+				order_error='';
+			} else {
+				const errorData = await response.json();
+				order_error = errorData.message || `HTTP error! status: ${response.status}`;
+			}
+		} catch (error) {
+			console.error('Error with login:', error);
+			order_error = 'An unexpected error occurred.';
+		}
+	}
+
+
+
+
+
 	let courier_age = '';
 	let courier_gender = '';
 	let courier_phone = '';
@@ -59,7 +224,12 @@
 		}
 	}
 
-    let update_courier_id = '';
+
+
+
+
+
+	let update_courier_id = '';
 	let update_courier_active = '';
 	let update_error_message = '';
 
@@ -107,23 +277,23 @@
 
 
 
-
 	let user_age = '';
 	let user_gender = '';
 	let user_phone = '';
+	let user_password = '';
 	let user_errorMessage = '';
 
 	function user_validateForm() {
 		user_errorMessage = ''; // Очищаем сообщение об ошибке
-
+		const phoneRegex = /^[+]?\d{11,12}$/;
 		if (isNaN(parseInt(user_age)) || parseInt(user_age) <= 0) {
 			user_errorMessage = 'Age must be a positive number.';
 			return false;
-		}
-
-		const phoneRegex = /^[+]?\d{11,12}$/;
-		if (!phoneRegex.test(user_phone)) {
-			user_errorMessage = 'Phone number must be 11 or 12 digits long.';
+		} else if (!phoneRegex.test(user_phone)) {
+			user_errorMessage = 'Phone number must be 11 or 12 digits long(with + or no).';
+			return false;
+		} else if (user_password.length == 0 || user_password.length > 40) {
+			user_errorMessage = 'Password incorrect.';
 			return false;
 		}
 
@@ -136,7 +306,8 @@
 		const userData = {
 			age: parseInt(user_age),
 			gender: user_gender,
-			phone: user_phone
+			phone: user_phone,
+			password: user_password
 		};
 
 		try {
@@ -156,6 +327,7 @@
 				user_age = '';
 				user_gender = '';
 				user_phone = '';
+				user_password = '';
 			}
 		} catch (error) {
 			console.error('Error adding user:', error);
@@ -165,55 +337,7 @@
 
 
 
-	let user_phone_info = '';
-	let user_errorMessage_info = '';
-  	let user_data=null;
-	function infovalidateForm() {
-		user_errorMessage_info = ''; // Очищаем сообщение об ошибке
-
-		const phoneRegex = /^[+]?\d{11,12}$/;
-		if (!phoneRegex.test(user_phone_info)) {
-			user_errorMessage_info = 'Phone number must be 11 or 12 digits long.';
-			return false;
-		}
-
-		return true;
-	}
-  async function infohandleSubmit() {
-		if (!infovalidateForm()) return; // Прерываем отправку, если форма не прошла валидацию
-   
-		try {
-      const params = new URLSearchParams();
-    params.append('phone', user_phone_info);
-
-			const response = await fetch(`http://localhost:18080/api/v1/profile?${params}`);
-
-			if (!response.ok) {
-				const errorData = await response.json();
-				user_errorMessage_info = errorData.message || `HTTP error! status: ${response.status}`;
-
-			} else {
-        user_data = await response.json();
-        user_phone_info = '';
-			}
-		} catch (error) {
-			console.error('Error fetching user info:', error);
-			user_errorMessage_info = 'An unexpected error occurred.';
-      user_data=null;
-		}
-	}
-
-
-
-
-
-
-
-
-
-
-
-
+	
 	//let suggestions;
 	// 	onMount(() => {
 
@@ -236,20 +360,598 @@
 </div>
 
 <div class="colored-green">
-	<div class="header">
+	<div class="text5">
 		<h1>EcoMarket</h1>
 	</div>
-
-	<a href="#top" class="enter-button">Enter</a>
+	<div class="button-container">
+		<button class="enter-button" on:click={() => goto('/basket')}>Go to account</button>
+	</div>
 </div>
 
-<p>Visit <a href="https://svelte.dev/docs/kit">svelte.dev/docs/kit</a> to read the documentation</p>
+{#if loggedIn == false}
+	{#if register == true}
+		<div class="container">
+			<div class="header">
+				<form on:submit|preventDefault={handleSubmit}>
+					<input class="text1" type="text" bind:value={phone} placeholder="Phone" />
+					<input class="text1" type="text" bind:value={password} placeholder="Password" />
+					<button class="enter-button" type="submit">Login</button>
+				</form>
+				{#if errorMessage}
+					<p style="color: red;">{errorMessage}</p>
+				{/if}
+			</div>
+		</div>
+
+		<div class="container">
+			<p class="text1">Dont have an account? Click here!</p>
+			<div class="text1">
+				<button class="enter-button" type="button" on:click={registerClicked}>Registration</button>
+			</div>
+		</div>
+	{:else}
+		<div>
+			<form on:submit|preventDefault={user_handleSubmit}>
+				<div class="text1">
+					<div class="container">
+						<label for="age">Age:</label>
+						<input type="number" id="age" bind:value={user_age} />
+
+						<label for="gender">Gender:</label>
+						<input type="text" id="gender" bind:value={user_gender} />
+
+						<label for="phone">Phone:</label>
+						<input type="text" id="phone" bind:value={user_phone} />
+
+						<label for="password">Password:</label>
+						<input type="text" id="password" bind:value={user_password} />
+
+						<button class="enter-button">Register me</button>
+					</div>
+					{#if user_errorMessage}
+						<p style="color: red;">{user_errorMessage}</p>
+					{/if}
+					<div class="container">
+						<button class="enter-button" type="button" on:click={registerClicked}
+							>Back to login</button
+						>
+					</div>
+				</div>
+			</form>
+		</div>
+	{/if}
+{:else}
+	<div class="container1">
+		<div class="grid grid-cols-4 gap-4">
+			<Card padding="none" class="card">
+				<a href="/">
+					<img class="rounded-t-lg p-8" src="../images/image1.png" alt="product1" />
+				</a>
+				<div class="card-content px-5 pb-5">
+					<a href="/">
+						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
+							{product1[0].name}
+						</h5>
+					</a>
+					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
+						<Badge slot="text" class="ms-3">4,2</Badge>
+					</Rating>
+					<div class="card-footer flex items-center justify-between mt-auto">
+						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product1[0].price}</span>
+						<div class="flex space-x-2">
+							<button class="enter-button1" on:click={() => removeFromCart(product1[0].id, product1[0].name)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product1[0].id, product1[0].name)}>Buy now</button>
+						</div>
+					</div>
+				</div>
+			</Card>
+
+			<Card padding="none" class="card">
+				<div class="flex flex-col h-full">
+				  <div>
+					<a href="/">
+					  <img class="rounded-t-lg p-8" src="../images/image2.jpg" alt="product2" />
+					</a>
+					<div class="px-5">
+					  <a href="/">
+						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
+						  {product2[0].name}
+						</h5>
+					  </a>
+					  <Rating rating={4.2} size={24} class="mb-5 mt-2.5">
+						<Badge slot="text" class="ms-3">4,2</Badge>
+					  </Rating>
+					</div>
+				  </div>
+				  <div class="card-footer flex items-center justify-between px-5 pb-5 mt-auto"> 
+					<span class="text-3xl font-bold text-gray-900 dark:text-white">{product2[0].price}</span>
+					<div class="flex space-x-2">
+					  <button class="enter-button1" on:click={() => removeFromCart(product2[0].id, product2[0].name)}>Delete</button>
+					  <button class="enter-button1" on:click={() => addToCart(product2[0].id, product2[0].name)}>Buy now</button>
+					</div>
+				  </div>
+				</div>
+			  </Card>
+			  
+
+			<Card padding="none" class="card">
+				<a href="/">
+					<img class="rounded-t-lg p-8" src="../images/image3.png" alt="product3" />
+				</a>
+				<div class="card-content px-5 pb-5">
+					<a href="/">
+						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
+							{product3[0].name}
+						</h5>
+					</a>
+					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
+						<Badge slot="text" class="ms-3">4,2</Badge>
+					</Rating>
+					<div class="card-footer flex items-center justify-between mt-auto">
+						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product3[0].price}</span>
+						<div class="flex space-x-2">
+							<button class="enter-button1" on:click={() => removeFromCart(product3[0].id, product3[0].name)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product3[0].id, product3[0].name)}>Buy now</button>
+						</div>
+					</div>
+				</div>
+			</Card>
+
+			<Card padding="none" class="card">
+				<a href="/">
+					<img class="rounded-t-lg p-8" src="../images/image4.png" alt="product4" />
+				</a>
+				<div class="card-content px-5 pb-5">
+					<a href="/">
+						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
+							{product4[0].name}
+						</h5>
+					</a>
+					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
+						<Badge slot="text" class="ms-3">4,2</Badge>
+					</Rating>
+					<div class="card-footer flex items-center justify-between mt-auto">
+						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product4[0].price}</span>
+						<div class="flex space-x-2">
+							<button class="enter-button1" on:click={() => removeFromCart(product4[0].id, product4[0].name)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product4[0].id, product4[0].name)}>Buy now</button>
+						</div>
+					</div>
+				</div>
+			</Card>
+		</div>
+	</div>
+
+	<div class="container1">
+		<div class="grid grid-cols-4 gap-4">
+			<Card padding="none" class="card">
+				<a href="/">
+					<img class="rounded-t-lg p-8" src="../images/image5.png" alt="product5" />
+				</a>
+				<div class="card-content px-5 pb-5">
+					<a href="/">
+						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
+							{product5[0].name}
+						</h5>
+					</a>
+					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
+						<Badge slot="text" class="ms-3">4,2</Badge>
+					</Rating>
+					<div class="card-footer flex items-center justify-between mt-auto">
+						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product5[0].price}</span>
+						<div class="flex space-x-2">
+							<button class="enter-button1" on:click={() => removeFromCart(product5[0].id, product5[0].name)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product5[0].id, product5[0].name)}>Buy now</button>
+						</div>
+					</div>
+				</div>
+			</Card>
+
+			<Card padding="none" class="card">
+				<a href="/">
+					<img class="rounded-t-lg p-8" src="../images/image6.png" alt="product6" />
+				</a>
+				<div class="card-content px-5 pb-5">
+					<a href="/">
+						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
+							{product6[0].name}
+						</h5>
+					</a>
+					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
+						<Badge slot="text" class="ms-3">4,2</Badge>
+					</Rating>
+					<div class="card-footer flex items-center justify-between mt-auto">
+						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product6[0].price}</span>
+						<div class="flex space-x-2">
+							<button class="enter-button1" on:click={() => removeFromCart(product6[0].id, product6[0].name)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product6[0].id, product6[0].name)}>Buy now</button>
+						</div>
+					</div>
+				</div>
+			</Card>
+			<Card padding="none" class="card">
+				<a href="/">
+					<img class="rounded-t-lg p-8" src="../images/image7.png" alt="product7" />
+				</a>
+				<div class="card-content px-5 pb-5">
+					<a href="/">
+						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
+							{product4[0].name}
+						</h5>
+					</a>
+					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
+						<Badge slot="text" class="ms-3">4,2</Badge>
+					</Rating>
+					<div class="card-footer flex items-center justify-between mt-auto">
+						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product7[0].price}</span>
+						<div class="flex space-x-2">
+							<button class="enter-button1" on:click={() => removeFromCart(product7[0].id, product7[0].name)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product7[0].id, product7[0].name)}>Buy now</button>
+						</div>
+					</div>
+				</div>
+			</Card>
+
+			<Card padding="none" class="card">
+				<a href="/">
+					<img class="rounded-t-lg p-8" src="../images/image8.png" alt="product8" />
+				</a>
+				<div class="card-content px-5 pb-5">
+					<a href="/">
+						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
+							{product8[0].name}
+						</h5>
+					</a>
+					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
+						<Badge slot="text" class="ms-3">4,2</Badge>
+					</Rating>
+					<div class="card-footer flex items-center justify-between mt-auto">
+						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product8[0].price}</span>
+						<div class="flex space-x-2">
+							<button class="enter-button1" on:click={() => removeFromCart(product8[0].id, product8[0].name)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product8[0].id, product8[0].name)}>Buy now</button>
+						</div>
+					</div>
+				</div>
+			</Card>
+		</div>
+	</div>
+
+	<div class="container1">
+		<div class="grid grid-cols-4 gap-4">
+			<Card padding="none" class="card">
+				<a href="/">
+					<img class="rounded-t-lg p-8" src="../images/image9.png" alt="product9" />
+				</a>
+				<div class="card-content px-5 pb-5">
+					<a href="/">
+						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
+							{product9[0].name}
+						</h5>
+					</a>
+					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
+						<Badge slot="text" class="ms-3">4,2</Badge>
+					</Rating>
+					<div class="card-footer flex items-center justify-between mt-auto">
+						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product9[0].price}</span>
+						<div class="flex space-x-2">
+							<button class="enter-button1" on:click={() => removeFromCart(product9[0].id, product9[0].name)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product9[0].id, product9[0].name)}>Buy now</button>
+						</div>
+					</div>
+				</div>
+			</Card>
+
+			<Card padding="none" class="card">
+				<a href="/">
+					<img class="rounded-t-lg p-8" src="../images/image10.png" alt="product10" />
+				</a>
+				<div class="card-content px-5 pb-5">
+					<a href="/">
+						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
+							{product10[0].name}
+						</h5>
+					</a>
+					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
+						<Badge slot="text" class="ms-3">4,2</Badge>
+					</Rating>
+					<div class="card-footer flex items-center justify-between mt-auto">
+						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product10[0].price}</span>
+						<div class="flex space-x-2">
+							<button class="enter-button1" on:click={() => removeFromCart(product10[0].id, product10[0].name)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product10[0].id, product10[0].name)}>Buy now</button>
+						</div>
+					</div>
+				</div>
+			</Card>
+
+			<Card padding="none" class="card">
+				<a href="/">
+					<img class="rounded-t-lg p-8" src="../images/image11.png" alt="product11" />
+				</a>
+				<div class="card-content px-5 pb-5">
+					<a href="/">
+						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
+							{product11[0].name}
+						</h5>
+					</a>
+					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
+						<Badge slot="text" class="ms-3">4,2</Badge>
+					</Rating>
+					<div class="card-footer flex items-center justify-between mt-auto">
+						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product11[0].price}</span>
+						<div class="flex space-x-2">
+							<button class="enter-button1" on:click={() => removeFromCart(product11[0].id, product11[0].name)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product11[0].id, product11[0].name)}>Buy now</button>
+						</div>
+					</div>
+				</div>
+			</Card>
+
+			<Card padding="none" class="card">
+				<a href="/">
+					<img class="rounded-t-lg p-8" src="../images/image12.png" alt="product12" />
+				</a>
+				<div class="card-content px-5 pb-5">
+					<a href="/">
+						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
+							{product12[0].name}
+						</h5>
+					</a>
+					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
+						<Badge slot="text" class="ms-3">4,2</Badge>
+					</Rating>
+					<div class="card-footer flex items-center justify-between mt-auto">
+						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product12[0].price}</span>
+						<div class="flex space-x-2">
+							<button class="enter-button1" on:click={() => removeFromCart(product12[0].id, product12[0].name)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product12[0].id, product12[0].name)}>Buy now</button>
+						</div>
+					</div>
+				</div>
+			</Card>
+
+		</div>
+	</div>
+
+
+
+
+	<div class="container1">
+		<div class="grid grid-cols-4 gap-4">
+			<Card padding="none" class="card">
+				<a href="/">
+					<img class="rounded-t-lg p-8" src="../images/image13.png" alt="product13" />
+				</a>
+				<div class="card-content px-5 pb-5">
+					<a href="/">
+						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
+							{product13[0].name}
+						</h5>
+					</a>
+					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
+						<Badge slot="text" class="ms-3">4,2</Badge>
+					</Rating>
+					<div class="card-footer flex items-center justify-between mt-auto">
+						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product13[0].price}</span>
+						<div class="flex space-x-2">
+							<button class="enter-button1" on:click={() => removeFromCart(product13[0].id, product13[0].name)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product13[0].id, product13[0].name)}>Buy now</button>
+						</div>
+					</div>
+				</div>
+			</Card>
+
+			<Card padding="none" class="card">
+				<a href="/">
+					<img class="rounded-t-lg p-8" src="../images/image14.png" alt="product14" />
+				</a>
+				<div class="card-content px-5 pb-5">
+					<a href="/">
+						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
+							{product14[0].name}
+						</h5>
+					</a>
+					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
+						<Badge slot="text" class="ms-3">4,2</Badge>
+					</Rating>
+					<div class="card-footer flex items-center justify-between mt-auto">
+						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product14[0].price}</span>
+						<div class="flex space-x-2">
+							<button class="enter-button1" on:click={() => removeFromCart(product14[0].id, product14[0].name)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product14[0].id, product14[0].name)}>Buy now</button>
+						</div>
+					</div>
+				</div>
+			</Card>
+			<Card padding="none" class="card">
+				<a href="/">
+					<img class="rounded-t-lg p-8" src="../images/image15.png" alt="product15" />
+				</a>
+				<div class="card-content px-5 pb-5">
+					<a href="/">
+						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
+							{product15[0].name}
+						</h5>
+					</a>
+					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
+						<Badge slot="text" class="ms-3">4,2</Badge>
+					</Rating>
+					<div class="card-footer flex items-center justify-between mt-auto">
+						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product15[0].price}</span>
+						<div class="flex space-x-2">
+							<button class="enter-button1" on:click={() => removeFromCart(product15[0].id, product15[0].name)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product15[0].id, product15[0].name)}>Buy now</button>
+						</div>
+					</div>
+				</div>
+			</Card>
+			<Card padding="none" class="card">
+				<a href="/">
+					<img class="rounded-t-lg p-8" src="../images/image16.png" alt="product16" />
+				</a>
+				<div class="card-content px-5 pb-5">
+					<a href="/">
+						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
+							{product16[0].name}
+						</h5>
+					</a>
+					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
+						<Badge slot="text" class="ms-3">4,2</Badge>
+					</Rating>
+					<div class="card-footer flex items-center justify-between mt-auto">
+						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product16[0].price}</span>
+						<div class="flex space-x-2">
+							<button class="enter-button1" on:click={() => removeFromCart(product16[0].id, product16[0].name)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product16[0].id, product16[0].name)}>Buy now</button>
+						</div>
+					</div>
+				</div>
+			</Card>
+		</div>
+	</div>
+
+
+	<div class="container1">
+		<div class="grid grid-cols-4 gap-4">
+			<Card padding="none" class="card">
+				<a href="/">
+					<img class="rounded-t-lg p-8" src="../images/image17.png" alt="product17" />
+				</a>
+				<div class="card-content px-5 pb-5">
+					<a href="/">
+						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
+							{product17[0].name}
+						</h5>
+					</a>
+					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
+						<Badge slot="text" class="ms-3">4,2</Badge>
+					</Rating>
+					<div class="card-footer flex items-center justify-between mt-auto">
+						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product17[0].price}</span>
+						<div class="flex space-x-2">
+							<button class="enter-button1" on:click={() => removeFromCart(product17[0].id, product17[0].name)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product17[0].id, product17[0].name)}>Buy now</button>
+						</div>
+					</div>
+				</div>
+			</Card>
+
+			<Card padding="none" class="card">
+				<a href="/">
+					<img class="rounded-t-lg p-8" src="../images/image18.png" alt="product18" />
+				</a>
+				<div class="card-content px-5 pb-5">
+					<a href="/">
+						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
+							{product18[0].name}
+						</h5>
+					</a>
+					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
+						<Badge slot="text" class="ms-3">4,2</Badge>
+					</Rating>
+					<div class="card-footer flex items-center justify-between mt-auto">
+						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product18[0].price}</span>
+						<div class="flex space-x-2">
+							<button class="enter-button1" on:click={() => removeFromCart(product18[0].id, product18[0].name)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product18[0].id, product18[0].name)}>Buy now</button>
+						</div>
+					</div>
+				</div>
+			</Card>
+			<Card padding="none" class="card">
+				<a href="/">
+					<img class="rounded-t-lg p-8" src="../images/image19.png" alt="product19" />
+				</a>
+				<div class="card-content px-5 pb-5">
+					<a href="/">
+						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
+							{product19[0].name}
+						</h5>
+					</a>
+					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
+						<Badge slot="text" class="ms-3">4,2</Badge>
+					</Rating>
+					<div class="card-footer flex items-center justify-between mt-auto">
+						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product19[0].price}</span>
+						<div class="flex space-x-2">
+							<button class="enter-button1" on:click={() => removeFromCart(product19[0].id, product19[0].name)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product19[0].id, product19[0].name)}>Buy now</button>
+						</div>
+					</div>
+				</div>
+			</Card>
+			<Card padding="none" class="card">
+				<a href="/">
+					<img class="rounded-t-lg p-8" src="../images/image20.png" alt="product20" />
+				</a>
+				<div class="card-content px-5 pb-5">
+					<a href="/">
+						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
+							{product20[0].name}
+						</h5>
+					</a>
+					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
+						<Badge slot="text" class="ms-3">4,2</Badge>
+					</Rating>
+					<div class="card-footer flex items-center justify-between mt-auto">
+						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product20[0].price}</span>
+						<div class="flex space-x-2">
+							<button class="enter-button1" on:click={() => removeFromCart(product20[0].id, product20[0].name)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product20[0].id, product20[0].name)}>Buy now</button>
+						</div>
+					</div>
+				</div>
+			</Card>
+		</div>
+	</div>
 
 
 
 
 
-<form on:submit|preventDefault={courier_handleSubmit}>
+
+
+
+
+	
+
+	<div class="flex justify-between ">
+
+
+	<form on:submit|preventDefault={order_handleSubmit}>
+		<label for="order_handleSubmit">Delivery address:</label>
+		<input type="text" id="order_handleSubmit" bind:value={delivery_address} />
+
+		<button class="enter-button">Create order</button>
+		{#if order_error}
+			<p style="color: red;">{order_error}</p>
+		{/if}
+	</form>
+	<div class="button-container">
+		<button class="enter-button" on:click={() => goto('/basket')}>Go to account</button>
+	</div>
+	</div>
+	
+
+
+	<div>
+	<p>
+		{#if cart.length > 0}
+			Your products: {productnames.join(', ')}
+		{:else}
+			Your cart is empty.
+		{/if}
+	</p>
+ </div> 
+	
+
+
+
+
+
+ <div>
+ <form on:submit|preventDefault={courier_handleSubmit}>
 	<label for="age">Age:</label>
 	<input type="number" id="age" bind:value={courier_age} />
 
@@ -266,108 +968,23 @@
 	{#if courier_errorMessage}
 		<p style="color: red;">{courier_errorMessage}</p>
 	{/if}
-</form>
+ </form>
 
-
-<form on:submit|preventDefault={update_courier_status}>  
+ <form on:submit|preventDefault={update_courier_status}>
 	<label for="update_courier_id">Courier id:</label>
 	<input type="number" id="update_courier_id" bind:value={update_courier_id} />
 
 	<label for="update_courier_active">Active:</label>
 	<input type="text" id="update_courier_active" bind:value={update_courier_active} />
-  <button class="enter-button">Update courier</button>
-  {#if update_error_message}
-  <p style="color: red;">{update_error_message}</p>
-{/if}
-</form>
-
-
-<form on:submit|preventDefault={user_handleSubmit}>
-	<label for="age">Age:</label>
-	<input type="number" id="age" bind:value={user_age} />
-
-	<label for="gender">Gender:</label>
-	<input type="text" id="gender" bind:value={user_gender} />
-
-	<label for="phone">Phone:</label>
-	<input type="text" id="phone" bind:value={user_phone} />
-
-	<button class="enter-button">Add User</button>
-	{#if user_errorMessage}
-		<p style="color: red;">{user_errorMessage}</p>
+	<button class="enter-button">Update courier</button>
+	{#if update_error_message}
+		<p style="color: red;">{update_error_message}</p>
 	{/if}
-</form>
+ </form>
+</div>
 
 
-
-<form on:submit|preventDefault={infohandleSubmit}>  
-	<label for="user_phone_info">Phone:</label>
-	<input type="number" id="user_phone_info" bind:value={user_phone_info} />
-
-  <button class="enter-button">Get info user</button>
-  {#if user_errorMessage_info}
-  <p style="color: red;">{user_errorMessage_info}</p>
 {/if}
-</form>
-{#if user_data} 
-<p>User ID: {user_data.user_id}, Age: {user_data.age}, Gender: {user_data.gender}, Phone: {user_data.phone}</p>
-{/if}
-
-
-
-
-
-
-
-
-
-<div class="button-container">
-	<button class="enter-button" on:click={() => goto('/basket')}>Go to order</button>
-  </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-<!-- <img src="http://google.com/coolcat.jpg" /> -->
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -396,17 +1013,35 @@
 		align-items: center;
 	}
 
+	.container {
+		padding-top: 200px; /* Adjust as needed */
+	}
+	.container1 {
+		padding-left: 200px;
+		padding-right: 200px;
+		padding-bottom: 20px;
+		padding-top: 20px;
+	}
 	.header {
-		font-size: 3em;
+		padding-left: 140px;
+		font-size: 2em;
+		margin: 0;
+		flex-grow: 1;
+		text-align: center;
+	}
+
+	.header1 {
+		padding-left: 100px;
+		font-size: 2em;
 		margin: 0;
 		flex-grow: 1;
 		text-align: center;
 	}
 
 	.text1 {
-		font-size: 3em;
+		font-size: 1em;
 		margin: 0;
-		flex-grow: 1;
+		flex-grow: 2;
 		text-align: center;
 	}
 
@@ -417,11 +1052,41 @@
 		text-align: right;
 	}
 
+	.text3 {
+		font-size: 3em;
+		margin: 0;
+		flex-grow: 1;
+		text-align: center;
+		align-items: center;
+	}
+
+	.text4 {
+		position: fixed;
+		font-size: 1em;
+		margin: 0;
+		flex-grow: 2;
+		text-align: center;
+	}
+
+	.text5 {
+    font-size: 3em;
+    flex-grow: 1;
+    text-align: center;
+	margin-left: 150px;
+}
+
 	.button-container {
-  display: flex;
-  justify-content: flex-end; 
-  margin-bottom: 10px; 
-} 
+		display: flex;
+		justify-content: flex-end;
+		margin-bottom: 10px;
+	}
+
+	.button-container1 {
+		display: flex;
+		justify-content: flex-end;
+		margin-bottom: 10px;
+		margin-left: 100px;
+	}
 
 	.enter-button {
 		padding: 10px 30px; /* Отступы внутри кнопки */
@@ -431,4 +1096,34 @@
 		border-radius: 6px;
 		margin-right: 10px;
 	}
+
+	.enter-button1 {
+		padding: 0px 3px; /* Отступы внутри кнопки */
+		color: #010101;
+		text-decoration: none;
+		border-radius: 2px;
+		margin-right: 2px;
+		border-bottom: 1px solid rgb(5, 3, 3);
+		border-top: 1px solid rgb(5, 3, 3);
+		border-right: 1px solid rgb(5, 3, 3);
+		border-left: 1px solid rgb(5, 3, 3);
+	}
+	.card {
+    display: flex;
+    flex-direction: column; /* Располагаем элементы в колонку */
+    height: 100%; /* Задаем высоту карточки */
+}
+
+.card-content {
+    display: flex;
+    flex-direction: column; /* Располагаем содержимое в колонку */
+    flex-grow: 1; /* Позволяет этому контейнеру занимать оставшееся пространство */
+}
+
+.card-footer {
+    display: flex; /* Используем Flexbox для размещения элементов в строку */
+    justify-content: space-between; /* Размещаем элементы по краям */
+    align-items: center; /* Центрируем элементы по вертикали */
+    margin-top: auto; /* Отталкивает футер вниз */
+}
 </style>
