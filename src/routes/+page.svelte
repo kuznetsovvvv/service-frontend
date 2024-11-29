@@ -31,15 +31,18 @@
 		product20
 	} from './products/products';
 
+	// работа с корзиной
 	let cart = [];
 	let productnames=[];
+	let sum = 0;
 	// Функция для добавления товара в корзину
-	function addToCart(productId,productname) {
+	function addToCart(productId,productname,productprice) {
 		cart = [...cart, productId]; // Создаем новый массив с добавленным ID
 		productnames = [...productnames, productname];
+		sum+=productprice;
 	}
 
-	function removeFromCart(productId,productname) {
+	function removeFromCart(productId,productname,productprice) {
 		const indexToRemove = cart.indexOf(productId);
 		const indextoRemove = productnames.indexOf(productname);
 		if (indexToRemove === -1 && indextoRemove === -1) {
@@ -49,10 +52,15 @@
 		cart.splice(indexToRemove, 1);
 		cart = [...cart];
 		productnames = [...productnames];
+
+		if(!isNaN(sum) || sum<0){
+		sum-=productprice;
+		sum=sum;
+		}
 	}
+  
 
-
-
+//логин пользователя
 	let phone = '';
 	let password = '';
 	let register = true;
@@ -116,7 +124,7 @@
 
 
 
-
+//создание заказа
 	let delivery_address = '';
 	let order_error='';
 	function order_validateForm() {
@@ -137,6 +145,7 @@ if(cart.length==0){
 	async function order_handleSubmit() {
 		if (!order_validateForm()) return;
 		const Data = {
+			old_phone: storephone,
 			delivery_address: delivery_address,
 			products: cart
 		};
@@ -165,7 +174,7 @@ if(cart.length==0){
 
 
 
-
+//добавить курьера
 	let courier_age = '';
 	let courier_gender = '';
 	let courier_phone = '';
@@ -190,7 +199,7 @@ if(cart.length==0){
 	}
 
 	async function courier_handleSubmit() {
-		if (!courier_validateForm()) return; // Прерываем отправку, если форма не прошла валидацию
+		if (!courier_validateForm()) return; 
 
 		const courierData = {
 			age: parseInt(courier_age),
@@ -228,7 +237,7 @@ if(cart.length==0){
 
 
 
-
+//обновить курьера
 	let update_courier_id = '';
 	let update_courier_active = '';
 	let update_error_message = '';
@@ -276,7 +285,7 @@ if(cart.length==0){
 
 
 
-
+//зарегать(добавить пользователя)
 	let user_age = '';
 	let user_gender = '';
 	let user_phone = '';
@@ -337,7 +346,107 @@ if(cart.length==0){
 
 
 
-	
+
+
+
+//создать действие курьера
+	let courier_action_order_id = '';
+	let courier_action_courier_id = '';
+	let courier_action_action='';
+	let errorMassagecourieraction = '';
+	function courieraction_validateForm() {
+		errorMassagecourieraction = ''; 
+		if (isNaN(parseInt(courier_action_order_id)) || parseInt(courier_action_order_id) <= 0) {
+			errorMassagecourieraction = 'Order id be a positive number.';
+			return false;
+		} else if (isNaN(parseInt(courier_action_courier_id )) || parseInt(courier_action_courier_id ) <= 0) {
+			errorMassagecourieraction = 'Phone number must be 11 or 12 digits long(with + or no).';
+			return false;
+		}
+		if (courier_action_action !== '"transfer"' || courier_action_action !== '"deliver"') {
+        errorMassagecourieraction = 'Action must be "transfer" or "deliver".';
+        return false;
+         }
+		return true;
+	}
+	async function courieraction_handleSubmit() {
+		if (!courieraction_validateForm()) return; 
+
+		const Data = {
+			order_id: parseInt(courier_action_order_id),
+			courier_id: parseInt(courier_action_courier_id),
+			action: courier_action_action
+		};
+
+		try {
+			const response = await fetch('http://localhost:18080/api/v1/order', {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(Data)
+			});
+
+			if (!response.ok) {
+				const errorData = await response.json();
+				errorMassagecourieraction = errorData.message || `HTTP error! status: ${response.status}`;
+			} else {
+				courier_action_order_id = '';
+				courier_action_courier_id = '';
+				courier_action_action='';
+			}
+		} catch (error) {
+			console.error('Error adding user:', error);
+			errorMassagecourieraction = 'An unexpected error occurred.';
+		}
+	}
+
+
+
+
+
+
+
+
+	let product_id = '';
+	let product_data = '';
+	let product_error_info = '';
+	function product_info_validateForm() {
+		product_error_info = ''; 
+		if (isNaN(parseInt(product_id)) || parseInt(product_id) < 0) {
+			errorMassagecourieraction = 'Product must id be a positive number.';
+			return false;
+		} 
+		return true;
+	}
+	async function info_product_handleSubmit() {
+		if (!product_info_validateForm()) return;
+		try {
+			if (!storephone) {
+				user_errorMessage_info = 'Phone number is required.';
+				return; // Прерываем выполнение, если номер телефона не задан
+			}
+			const params = new URLSearchParams();
+			params.append('phone', user_phone_info);
+
+			const response = await fetch(`http://localhost:18080/api/v1/profile?${params}`);
+
+			if (!response.ok) {
+				const errorData = await response.json();
+				user_errorMessage_info = errorData.message || `HTTP error! status: ${response.status}`;
+			} else {
+				user_data = await response.json();
+				user_phone_info = '';
+			}
+		} catch (error) {
+			console.error('Error fetching user info:', error);
+			user_errorMessage_info = 'An unexpected error occurred.';
+			user_data = '';
+		}
+	}
+
+
+
 	//let suggestions;
 	// 	onMount(() => {
 
@@ -439,8 +548,8 @@ if(cart.length==0){
 					<div class="card-footer flex items-center justify-between mt-auto">
 						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product1[0].price}</span>
 						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product1[0].id, product1[0].name)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product1[0].id, product1[0].name)}>Buy now</button>
+							<button class="enter-button1" on:click={() => removeFromCart(product1[0].id, product1[0].name,product1[0].price)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product1[0].id, product1[0].name,product1[0].price)}>Buy now</button>
 						</div>
 					</div>
 				</div>
@@ -466,8 +575,8 @@ if(cart.length==0){
 				  <div class="card-footer flex items-center justify-between px-5 pb-5 mt-auto"> 
 					<span class="text-3xl font-bold text-gray-900 dark:text-white">{product2[0].price}</span>
 					<div class="flex space-x-2">
-					  <button class="enter-button1" on:click={() => removeFromCart(product2[0].id, product2[0].name)}>Delete</button>
-					  <button class="enter-button1" on:click={() => addToCart(product2[0].id, product2[0].name)}>Buy now</button>
+					  <button class="enter-button1" on:click={() => removeFromCart(product2[0].id, product2[0].name,product2[0].price)}>Delete</button>
+					  <button class="enter-button1" on:click={() => addToCart(product2[0].id, product2[0].name,product2[0].price)}>Buy now</button>
 					</div>
 				  </div>
 				</div>
@@ -490,8 +599,8 @@ if(cart.length==0){
 					<div class="card-footer flex items-center justify-between mt-auto">
 						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product3[0].price}</span>
 						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product3[0].id, product3[0].name)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product3[0].id, product3[0].name)}>Buy now</button>
+							<button class="enter-button1" on:click={() => removeFromCart(product3[0].id, product3[0].name,product3[0].price)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product3[0].id, product3[0].name,product3[0].price)}>Buy now</button>
 						</div>
 					</div>
 				</div>
@@ -513,8 +622,8 @@ if(cart.length==0){
 					<div class="card-footer flex items-center justify-between mt-auto">
 						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product4[0].price}</span>
 						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product4[0].id, product4[0].name)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product4[0].id, product4[0].name)}>Buy now</button>
+							<button class="enter-button1" on:click={() => removeFromCart(product4[0].id, product4[0].name,product4[0].price)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product4[0].id, product4[0].name,product4[0].price)}>Buy now</button>
 						</div>
 					</div>
 				</div>
@@ -540,8 +649,8 @@ if(cart.length==0){
 					<div class="card-footer flex items-center justify-between mt-auto">
 						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product5[0].price}</span>
 						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product5[0].id, product5[0].name)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product5[0].id, product5[0].name)}>Buy now</button>
+							<button class="enter-button1" on:click={() => removeFromCart(product5[0].id, product5[0].name,product5[0].price)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product5[0].id, product5[0].name,product5[0].price)}>Buy now</button>
 						</div>
 					</div>
 				</div>
@@ -563,8 +672,8 @@ if(cart.length==0){
 					<div class="card-footer flex items-center justify-between mt-auto">
 						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product6[0].price}</span>
 						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product6[0].id, product6[0].name)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product6[0].id, product6[0].name)}>Buy now</button>
+							<button class="enter-button1" on:click={() => removeFromCart(product6[0].id, product6[0].name,product6[0].price)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product6[0].id, product6[0].name,product6[0].price)}>Buy now</button>
 						</div>
 					</div>
 				</div>
@@ -585,8 +694,8 @@ if(cart.length==0){
 					<div class="card-footer flex items-center justify-between mt-auto">
 						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product7[0].price}</span>
 						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product7[0].id, product7[0].name)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product7[0].id, product7[0].name)}>Buy now</button>
+							<button class="enter-button1" on:click={() => removeFromCart(product7[0].id, product7[0].name,product7[0].price)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product7[0].id, product7[0].name,product7[0].price)}>Buy now</button>
 						</div>
 					</div>
 				</div>
@@ -608,8 +717,8 @@ if(cart.length==0){
 					<div class="card-footer flex items-center justify-between mt-auto">
 						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product8[0].price}</span>
 						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product8[0].id, product8[0].name)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product8[0].id, product8[0].name)}>Buy now</button>
+							<button class="enter-button1" on:click={() => removeFromCart(product8[0].id, product8[0].name,product8[0].price)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product8[0].id, product8[0].name,product8[0].price)}>Buy now</button>
 						</div>
 					</div>
 				</div>
@@ -635,8 +744,8 @@ if(cart.length==0){
 					<div class="card-footer flex items-center justify-between mt-auto">
 						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product9[0].price}</span>
 						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product9[0].id, product9[0].name)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product9[0].id, product9[0].name)}>Buy now</button>
+							<button class="enter-button1" on:click={() => removeFromCart(product9[0].id, product9[0].name,product9[0].price)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product9[0].id, product9[0].name,product9[0].price)}>Buy now</button>
 						</div>
 					</div>
 				</div>
@@ -658,8 +767,8 @@ if(cart.length==0){
 					<div class="card-footer flex items-center justify-between mt-auto">
 						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product10[0].price}</span>
 						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product10[0].id, product10[0].name)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product10[0].id, product10[0].name)}>Buy now</button>
+							<button class="enter-button1" on:click={() => removeFromCart(product10[0].id, product10[0].name,product10[0].price)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product10[0].id, product10[0].name,product10[0].price)}>Buy now</button>
 						</div>
 					</div>
 				</div>
@@ -681,8 +790,8 @@ if(cart.length==0){
 					<div class="card-footer flex items-center justify-between mt-auto">
 						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product11[0].price}</span>
 						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product11[0].id, product11[0].name)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product11[0].id, product11[0].name)}>Buy now</button>
+							<button class="enter-button1" on:click={() => removeFromCart(product11[0].id, product11[0].name,product11[0].price)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product11[0].id, product11[0].name,product11[0].price)}>Buy now</button>
 						</div>
 					</div>
 				</div>
@@ -704,8 +813,8 @@ if(cart.length==0){
 					<div class="card-footer flex items-center justify-between mt-auto">
 						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product12[0].price}</span>
 						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product12[0].id, product12[0].name)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product12[0].id, product12[0].name)}>Buy now</button>
+							<button class="enter-button1" on:click={() => removeFromCart(product12[0].id, product12[0].name,product12[0].price)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product12[0].id, product12[0].name,product12[0].price)}>Buy now</button>
 						</div>
 					</div>
 				</div>
@@ -735,8 +844,8 @@ if(cart.length==0){
 					<div class="card-footer flex items-center justify-between mt-auto">
 						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product13[0].price}</span>
 						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product13[0].id, product13[0].name)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product13[0].id, product13[0].name)}>Buy now</button>
+							<button class="enter-button1" on:click={() => removeFromCart(product13[0].id, product13[0].name,product13[0].price)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product13[0].id, product13[0].name,product13[0].price)}>Buy now</button>
 						</div>
 					</div>
 				</div>
@@ -758,8 +867,8 @@ if(cart.length==0){
 					<div class="card-footer flex items-center justify-between mt-auto">
 						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product14[0].price}</span>
 						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product14[0].id, product14[0].name)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product14[0].id, product14[0].name)}>Buy now</button>
+							<button class="enter-button1" on:click={() => removeFromCart(product14[0].id, product14[0].name,product14[0].price)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product14[0].id, product14[0].name,product14[0].price)}>Buy now</button>
 						</div>
 					</div>
 				</div>
@@ -780,8 +889,8 @@ if(cart.length==0){
 					<div class="card-footer flex items-center justify-between mt-auto">
 						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product15[0].price}</span>
 						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product15[0].id, product15[0].name)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product15[0].id, product15[0].name)}>Buy now</button>
+							<button class="enter-button1" on:click={() => removeFromCart(product15[0].id, product15[0].name,product15[0].price)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product15[0].id, product15[0].name,product15[0].price)}>Buy now</button>
 						</div>
 					</div>
 				</div>
@@ -802,8 +911,8 @@ if(cart.length==0){
 					<div class="card-footer flex items-center justify-between mt-auto">
 						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product16[0].price}</span>
 						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product16[0].id, product16[0].name)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product16[0].id, product16[0].name)}>Buy now</button>
+							<button class="enter-button1" on:click={() => removeFromCart(product16[0].id, product16[0].name,product16[0].price)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product16[0].id, product16[0].name,product16[0].price)}>Buy now</button>
 						</div>
 					</div>
 				</div>
@@ -830,8 +939,8 @@ if(cart.length==0){
 					<div class="card-footer flex items-center justify-between mt-auto">
 						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product17[0].price}</span>
 						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product17[0].id, product17[0].name)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product17[0].id, product17[0].name)}>Buy now</button>
+							<button class="enter-button1" on:click={() => removeFromCart(product17[0].id, product17[0].name,product17[0].price)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product17[0].id, product17[0].name,product17[0].price)}>Buy now</button>
 						</div>
 					</div>
 				</div>
@@ -853,8 +962,8 @@ if(cart.length==0){
 					<div class="card-footer flex items-center justify-between mt-auto">
 						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product18[0].price}</span>
 						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product18[0].id, product18[0].name)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product18[0].id, product18[0].name)}>Buy now</button>
+							<button class="enter-button1" on:click={() => removeFromCart(product18[0].id, product18[0].name,product18[0].price)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product18[0].id, product18[0].name,product18[0].price)}>Buy now</button>
 						</div>
 					</div>
 				</div>
@@ -875,8 +984,8 @@ if(cart.length==0){
 					<div class="card-footer flex items-center justify-between mt-auto">
 						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product19[0].price}</span>
 						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product19[0].id, product19[0].name)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product19[0].id, product19[0].name)}>Buy now</button>
+							<button class="enter-button1" on:click={() => removeFromCart(product19[0].id, product19[0].name,product19[0].price)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product19[0].id, product19[0].name,product19[0].price)}>Buy now</button>
 						</div>
 					</div>
 				</div>
@@ -897,8 +1006,8 @@ if(cart.length==0){
 					<div class="card-footer flex items-center justify-between mt-auto">
 						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product20[0].price}</span>
 						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product20[0].id, product20[0].name)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product20[0].id, product20[0].name)}>Buy now</button>
+							<button class="enter-button1" on:click={() => removeFromCart(product20[0].id, product20[0].name,product20[0].price)}>Delete</button>
+							<button class="enter-button1" on:click={() => addToCart(product20[0].id, product20[0].name,product20[0].price)}>Buy now</button>
 						</div>
 					</div>
 				</div>
@@ -936,7 +1045,9 @@ if(cart.length==0){
 
 
 	<div>
+		<p>{sum} rub</p>
 	<p>
+		
 		{#if cart.length > 0}
 			Your products: {productnames.join(', ')}
 		{:else}
@@ -982,6 +1093,30 @@ if(cart.length==0){
 	{/if}
  </form>
 </div>
+
+
+
+<form on:submit|preventDefault={courieraction_handleSubmit}>
+	<label for="courier_action_order_id">Order id:</label>
+	<input type="number" id="courier_action_order_id" bind:value={courier_action_order_id} />
+
+	<label for="courier_action_courier_id">Courier id:</label>
+	<input type="number" id="courier_action_courier_id" bind:value={courier_action_courier_id} />
+
+	<label for="courier_action_action">Action(transfer or deliver):</label>
+	<input type="text" id="courier_action_action" bind:value={courier_action_action} />
+	<button class="enter-button">Create courier action(transfer order to courier)</button>
+	{#if errorMassagecourieraction}
+		<p style="color: red;">{errorMassagecourieraction}</p>
+	{/if}
+ </form>
+
+
+
+
+
+
+
 
 
 {/if}
