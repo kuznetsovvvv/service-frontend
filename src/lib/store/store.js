@@ -1,4 +1,3 @@
-// import type { UserRemoveSolid } from 'flowbite-svelte-icons';
 import { writable } from 'svelte/store';
 
 const userStore = writable({
@@ -11,6 +10,7 @@ export const userStatus = {
   setLoggedIn: (phone) => userStore.set({ loggedIn: true, storephone: phone }),
   reset: () => userStore.set({ loggedIn: false, storephone: '' })
 };
+
 
 
 // const userId = writable({

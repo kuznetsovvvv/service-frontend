@@ -4,32 +4,9 @@
 	import { ArrowRightOutline } from 'flowbite-svelte-icons';
 	import { Card, Button, Rating, Badge } from 'flowbite-svelte';
 	import { onDestroy } from 'svelte';
-	import { userStatus } from '../store/store';
+	import { userStatus } from '../lib/store/store.js';
 	import { json } from '@sveltejs/kit';
-	import {
-		product1,
-		product2,
-		product3,
-		product4,
-		product5,
-		product6,
-		product7,
-		product8,
-		product9,
-		product10
-	} from './products/products';
-	import {
-		product11,
-		product12,
-		product13,
-		product14,
-		product15,
-		product16,
-		product17,
-		product18,
-		product19,
-		product20
-	} from './products/products';
+	import { products } from '../lib/products/products';
 
 	// работа с корзиной
 	let cart = [];
@@ -107,8 +84,6 @@
 				phone = '';
 				password = '';
 				errorMessage = '';
-				
-
 			} else {
 				const errorData = await response.json();
 				errorMessage = errorData.message || `HTTP error! status: ${response.status}`;
@@ -246,6 +221,11 @@ if(cart.length==0){
 		update_error_message = ''; // Очищаем сообщение об ошибке
 
 		if (isNaN(parseInt(update_courier_id)) || parseInt(update_courier_id) <= 0) {
+			update_error_message = 'Courier id must be a positive number.';
+			return false;
+		}
+		if(update_courier_active.length>3 || update_courier_active.length === 0){
+			update_error_message = 'Courier active status must be either "active" or "inactive".';
 			update_error_message = 'Courier id must be a positive number.';
 			return false;
 		}
@@ -407,13 +387,13 @@ if(cart.length==0){
 
 
 
-
-	let product_id = '';
-	let product_data = '';
+//посмотреть информацию о продукте
+	let info_product_name = '';
+	let info_product_data = '';
 	let product_error_info = '';
 	function product_info_validateForm() {
 		product_error_info = ''; 
-		if (isNaN(parseInt(product_id)) || parseInt(product_id) < 0) {
+		if (info_product_name.length>30 || info_product_name.length===0) {
 			errorMassagecourieraction = 'Product must id be a positive number.';
 			return false;
 		} 
@@ -422,26 +402,129 @@ if(cart.length==0){
 	async function info_product_handleSubmit() {
 		if (!product_info_validateForm()) return;
 		try {
-			if (!storephone) {
-				user_errorMessage_info = 'Phone number is required.';
-				return; // Прерываем выполнение, если номер телефона не задан
-			}
 			const params = new URLSearchParams();
-			params.append('phone', user_phone_info);
-
-			const response = await fetch(`http://localhost:18080/api/v1/profile?${params}`);
+			params.append('name', info_product_name);
+			
+			const response = await fetch(`http://localhost:18080/api/v1/product?${params}`);
 
 			if (!response.ok) {
 				const errorData = await response.json();
-				user_errorMessage_info = errorData.message || `HTTP error! status: ${response.status}`;
+				product_error_info = errorData.message || `HTTP error! status: ${response.status}`;
 			} else {
-				user_data = await response.json();
-				user_phone_info = '';
+				info_product_data = await response.json();
+				product_error_info = '';
 			}
 		} catch (error) {
 			console.error('Error fetching user info:', error);
-			user_errorMessage_info = 'An unexpected error occurred.';
-			user_data = '';
+			product_error_info = 'An unexpected error occurred.';
+			info_product_data = '';
+		}
+	}
+
+
+//обновить информацию о продукте
+	let update_product_id='';
+	let update_product_name= '';
+	let update_product_price = '';
+	let update_product_count='';
+	let update_product_error_message = '';
+
+	function update_product_validateForm() {
+		update_product_error_message = ''; // Очищаем сообщение об ошибке
+
+
+		if(isNaN(parseInt(update_product_id)) || parseInt(update_product_id)<0){
+			update_product_error_message = 'Product id must be a positive number.';
+			return false;
+		}
+		if (update_product_name.length>30 || update_product_name.length === 0) {
+			update_product_error_message = 'Name must be under 30 symbols.';
+			return false;
+		}
+		if(isNaN(parseInt(update_product_price)) || parseInt(update_product_price)<0){
+			update_product_error_message = 'Price must be a positive number.';
+           return false;
+		}
+        if(isNaN(parseInt(update_product_count)) || parseInt(update_product_count)<0){
+			update_product_error_message = 'Count must be a positive number.';
+	        return false;
+        }
+
+		return true;
+	}
+
+	async function update_product_handleSubmit() {
+		if (!update_product_validateForm()) return;
+
+		const updateData = {
+			product_id: parseInt(update_product_id),
+			name: update_product_name,
+			price: parseInt(update_product_price),
+			count: parseInt(update_product_count)
+		};
+		try {
+			const response = await fetch('http://localhost:18080/api/v1/product', {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(updateData)
+			});
+			if (!response.ok) {
+				const errorData = await response.json();
+				update_error_message = errorData.message || `HTTP error! status: ${response.status}`;
+			} else {
+				update_product_id = '';
+				update_product_name = '';
+				update_product_price = '';
+				update_product_count='';
+			}
+		} catch (error) {
+			console.error('Error adding user:', error);
+			update_error_message = 'An unexpected error occurred.';
+		}
+	}
+
+
+
+//удалить продукт
+	let delete_product_id='';
+	let delete_product_message = '';
+
+	function delete_product_validateForm() {
+		delete_product_message = ''; // Очищаем сообщение об ошибке
+
+		if(isNaN(parseInt(delete_product_id)) || parseInt(delete_product_id)<0){
+			delete_product_message = 'Product id must be a positive number.';
+			return false;
+		}
+
+		return true;
+	}
+	
+	async function delete_product_handleSubmit() {
+		if (!delete_product_validateForm()) return;
+
+		const deleteData = {
+			product_id: parseInt(delete_product_id)
+		};
+		try {
+			const response = await fetch('http://localhost:18080/api/v1/product', {
+				method: 'DELETE',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(deleteData)
+			});
+			if (!response.ok) {
+				const errorData = await response.json();
+				delete_product_message = errorData.message || `HTTP error! status: ${response.status}`;
+			} else {
+				delete_product_id='';
+			}
+		} catch (error) {
+			console.error('Error adding user:', error);
+			delete_product_message = 'An unexpected error occurred.';
 		}
 	}
 
@@ -461,6 +544,7 @@ if(cart.length==0){
 	// 	console.log('the component has mounted');
 	//   });
 </script>
+
 
 <div class="colored-gray">
 	<div class="text2">
@@ -530,504 +614,40 @@ if(cart.length==0){
 		</div>
 	{/if}
 {:else}
-	<div class="container1">
-		<div class="grid grid-cols-4 gap-4">
-			<Card padding="none" class="card">
-				<a href="/">
-					<img class="rounded-t-lg p-8" src="../images/image1.png" alt="product1" />
-				</a>
-				<div class="card-content px-5 pb-5">
-					<a href="/">
-						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
-							{product1[0].name}
-						</h5>
-					</a>
-					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
-						<Badge slot="text" class="ms-3">4,2</Badge>
-					</Rating>
-					<div class="card-footer flex items-center justify-between mt-auto">
-						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product1[0].price}</span>
-						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product1[0].id, product1[0].name,product1[0].price)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product1[0].id, product1[0].name,product1[0].price)}>Buy now</button>
-						</div>
-					</div>
-				</div>
-			</Card>
 
-			<Card padding="none" class="card">
-				<div class="flex flex-col h-full">
-				  <div>
-					<a href="/">
-					  <img class="rounded-t-lg p-8" src="../images/image2.jpg" alt="product2" />
-					</a>
-					<div class="px-5">
-					  <a href="/">
-						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
-						  {product2[0].name}
-						</h5>
-					  </a>
-					  <Rating rating={4.2} size={24} class="mb-5 mt-2.5">
-						<Badge slot="text" class="ms-3">4,2</Badge>
-					  </Rating>
-					</div>
-				  </div>
-				  <div class="card-footer flex items-center justify-between px-5 pb-5 mt-auto"> 
-					<span class="text-3xl font-bold text-gray-900 dark:text-white">{product2[0].price}</span>
-					<div class="flex space-x-2">
-					  <button class="enter-button1" on:click={() => removeFromCart(product2[0].id, product2[0].name,product2[0].price)}>Delete</button>
-					  <button class="enter-button1" on:click={() => addToCart(product2[0].id, product2[0].name,product2[0].price)}>Buy now</button>
-					</div>
-				  </div>
-				</div>
-			  </Card>
-			  
 
-			<Card padding="none" class="card">
-				<a href="/">
-					<img class="rounded-t-lg p-8" src="../images/image3.png" alt="product3" />
-				</a>
-				<div class="card-content px-5 pb-5">
-					<a href="/">
-						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
-							{product3[0].name}
-						</h5>
-					</a>
-					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
-						<Badge slot="text" class="ms-3">4,2</Badge>
-					</Rating>
-					<div class="card-footer flex items-center justify-between mt-auto">
-						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product3[0].price}</span>
-						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product3[0].id, product3[0].name,product3[0].price)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product3[0].id, product3[0].name,product3[0].price)}>Buy now</button>
-						</div>
-					</div>
-				</div>
-			</Card>
-
-			<Card padding="none" class="card">
-				<a href="/">
-					<img class="rounded-t-lg p-8" src="../images/image4.png" alt="product4" />
-				</a>
-				<div class="card-content px-5 pb-5">
-					<a href="/">
-						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
-							{product4[0].name}
-						</h5>
-					</a>
-					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
-						<Badge slot="text" class="ms-3">4,2</Badge>
-					</Rating>
-					<div class="card-footer flex items-center justify-between mt-auto">
-						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product4[0].price}</span>
-						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product4[0].id, product4[0].name,product4[0].price)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product4[0].id, product4[0].name,product4[0].price)}>Buy now</button>
-						</div>
-					</div>
-				</div>
-			</Card>
+<div class="container1">
+	<div class="grid grid-cols-4 gap-4">
+	  {#each products as product}
+		<Card padding="none" class="card">
+	  <a href="/">
+		<img class="rounded-t-lg p-8" src="{product.image}" alt="product1" />
+	  </a>
+	  <div class="card-content px-5 pb-5 mt-auto">
+		<a href="/">
+		  <h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
+			{product.name}
+		  </h5>
+		</a>
+		<Rating rating={product.rate} size={24} class="mb-5 mt-2.5">
+		  <Badge slot="text" class="ms-3">{product.rate}</Badge>
+		</Rating>
+		<div class="card-footer flex items-center justify-between">
+		  <span class="text-3xl font-bold text-gray-900 dark:text-white float-end">{product.price}</span>
+		  <div class="flex space-x-2 float-end">
+			<button class="enter-button1" on:click={() => removeFromCart(product.id, product.name,product.price)}>Delete</button>
+			<button class="enter-button1" on:click={() => addToCart(product.id, product.name,product.price)}>Buy now</button>
+		  </div>
 		</div>
+	  </div>
+		</Card>
+	  {/each}
 	</div>
-
-	<div class="container1">
-		<div class="grid grid-cols-4 gap-4">
-			<Card padding="none" class="card">
-				<a href="/">
-					<img class="rounded-t-lg p-8" src="../images/image5.png" alt="product5" />
-				</a>
-				<div class="card-content px-5 pb-5">
-					<a href="/">
-						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
-							{product5[0].name}
-						</h5>
-					</a>
-					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
-						<Badge slot="text" class="ms-3">4,2</Badge>
-					</Rating>
-					<div class="card-footer flex items-center justify-between mt-auto">
-						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product5[0].price}</span>
-						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product5[0].id, product5[0].name,product5[0].price)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product5[0].id, product5[0].name,product5[0].price)}>Buy now</button>
-						</div>
-					</div>
-				</div>
-			</Card>
-
-			<Card padding="none" class="card">
-				<a href="/">
-					<img class="rounded-t-lg p-8" src="../images/image6.png" alt="product6" />
-				</a>
-				<div class="card-content px-5 pb-5">
-					<a href="/">
-						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
-							{product6[0].name}
-						</h5>
-					</a>
-					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
-						<Badge slot="text" class="ms-3">4,2</Badge>
-					</Rating>
-					<div class="card-footer flex items-center justify-between mt-auto">
-						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product6[0].price}</span>
-						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product6[0].id, product6[0].name,product6[0].price)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product6[0].id, product6[0].name,product6[0].price)}>Buy now</button>
-						</div>
-					</div>
-				</div>
-			</Card>
-			<Card padding="none" class="card">
-				<a href="/">
-					<img class="rounded-t-lg p-8" src="../images/image7.png" alt="product7" />
-				</a>
-				<div class="card-content px-5 pb-5">
-					<a href="/">
-						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
-							{product4[0].name}
-						</h5>
-					</a>
-					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
-						<Badge slot="text" class="ms-3">4,2</Badge>
-					</Rating>
-					<div class="card-footer flex items-center justify-between mt-auto">
-						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product7[0].price}</span>
-						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product7[0].id, product7[0].name,product7[0].price)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product7[0].id, product7[0].name,product7[0].price)}>Buy now</button>
-						</div>
-					</div>
-				</div>
-			</Card>
-
-			<Card padding="none" class="card">
-				<a href="/">
-					<img class="rounded-t-lg p-8" src="../images/image8.png" alt="product8" />
-				</a>
-				<div class="card-content px-5 pb-5">
-					<a href="/">
-						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
-							{product8[0].name}
-						</h5>
-					</a>
-					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
-						<Badge slot="text" class="ms-3">4,2</Badge>
-					</Rating>
-					<div class="card-footer flex items-center justify-between mt-auto">
-						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product8[0].price}</span>
-						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product8[0].id, product8[0].name,product8[0].price)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product8[0].id, product8[0].name,product8[0].price)}>Buy now</button>
-						</div>
-					</div>
-				</div>
-			</Card>
-		</div>
-	</div>
-
-	<div class="container1">
-		<div class="grid grid-cols-4 gap-4">
-			<Card padding="none" class="card">
-				<a href="/">
-					<img class="rounded-t-lg p-8" src="../images/image9.png" alt="product9" />
-				</a>
-				<div class="card-content px-5 pb-5">
-					<a href="/">
-						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
-							{product9[0].name}
-						</h5>
-					</a>
-					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
-						<Badge slot="text" class="ms-3">4,2</Badge>
-					</Rating>
-					<div class="card-footer flex items-center justify-between mt-auto">
-						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product9[0].price}</span>
-						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product9[0].id, product9[0].name,product9[0].price)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product9[0].id, product9[0].name,product9[0].price)}>Buy now</button>
-						</div>
-					</div>
-				</div>
-			</Card>
-
-			<Card padding="none" class="card">
-				<a href="/">
-					<img class="rounded-t-lg p-8" src="../images/image10.png" alt="product10" />
-				</a>
-				<div class="card-content px-5 pb-5">
-					<a href="/">
-						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
-							{product10[0].name}
-						</h5>
-					</a>
-					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
-						<Badge slot="text" class="ms-3">4,2</Badge>
-					</Rating>
-					<div class="card-footer flex items-center justify-between mt-auto">
-						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product10[0].price}</span>
-						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product10[0].id, product10[0].name,product10[0].price)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product10[0].id, product10[0].name,product10[0].price)}>Buy now</button>
-						</div>
-					</div>
-				</div>
-			</Card>
-
-			<Card padding="none" class="card">
-				<a href="/">
-					<img class="rounded-t-lg p-8" src="../images/image11.png" alt="product11" />
-				</a>
-				<div class="card-content px-5 pb-5">
-					<a href="/">
-						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
-							{product11[0].name}
-						</h5>
-					</a>
-					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
-						<Badge slot="text" class="ms-3">4,2</Badge>
-					</Rating>
-					<div class="card-footer flex items-center justify-between mt-auto">
-						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product11[0].price}</span>
-						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product11[0].id, product11[0].name,product11[0].price)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product11[0].id, product11[0].name,product11[0].price)}>Buy now</button>
-						</div>
-					</div>
-				</div>
-			</Card>
-
-			<Card padding="none" class="card">
-				<a href="/">
-					<img class="rounded-t-lg p-8" src="../images/image12.png" alt="product12" />
-				</a>
-				<div class="card-content px-5 pb-5">
-					<a href="/">
-						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
-							{product12[0].name}
-						</h5>
-					</a>
-					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
-						<Badge slot="text" class="ms-3">4,2</Badge>
-					</Rating>
-					<div class="card-footer flex items-center justify-between mt-auto">
-						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product12[0].price}</span>
-						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product12[0].id, product12[0].name,product12[0].price)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product12[0].id, product12[0].name,product12[0].price)}>Buy now</button>
-						</div>
-					</div>
-				</div>
-			</Card>
-
-		</div>
-	</div>
+  </div>
 
 
-
-
-	<div class="container1">
-		<div class="grid grid-cols-4 gap-4">
-			<Card padding="none" class="card">
-				<a href="/">
-					<img class="rounded-t-lg p-8" src="../images/image13.png" alt="product13" />
-				</a>
-				<div class="card-content px-5 pb-5">
-					<a href="/">
-						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
-							{product13[0].name}
-						</h5>
-					</a>
-					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
-						<Badge slot="text" class="ms-3">4,2</Badge>
-					</Rating>
-					<div class="card-footer flex items-center justify-between mt-auto">
-						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product13[0].price}</span>
-						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product13[0].id, product13[0].name,product13[0].price)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product13[0].id, product13[0].name,product13[0].price)}>Buy now</button>
-						</div>
-					</div>
-				</div>
-			</Card>
-
-			<Card padding="none" class="card">
-				<a href="/">
-					<img class="rounded-t-lg p-8" src="../images/image14.png" alt="product14" />
-				</a>
-				<div class="card-content px-5 pb-5">
-					<a href="/">
-						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
-							{product14[0].name}
-						</h5>
-					</a>
-					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
-						<Badge slot="text" class="ms-3">4,2</Badge>
-					</Rating>
-					<div class="card-footer flex items-center justify-between mt-auto">
-						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product14[0].price}</span>
-						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product14[0].id, product14[0].name,product14[0].price)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product14[0].id, product14[0].name,product14[0].price)}>Buy now</button>
-						</div>
-					</div>
-				</div>
-			</Card>
-			<Card padding="none" class="card">
-				<a href="/">
-					<img class="rounded-t-lg p-8" src="../images/image15.png" alt="product15" />
-				</a>
-				<div class="card-content px-5 pb-5">
-					<a href="/">
-						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
-							{product15[0].name}
-						</h5>
-					</a>
-					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
-						<Badge slot="text" class="ms-3">4,2</Badge>
-					</Rating>
-					<div class="card-footer flex items-center justify-between mt-auto">
-						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product15[0].price}</span>
-						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product15[0].id, product15[0].name,product15[0].price)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product15[0].id, product15[0].name,product15[0].price)}>Buy now</button>
-						</div>
-					</div>
-				</div>
-			</Card>
-			<Card padding="none" class="card">
-				<a href="/">
-					<img class="rounded-t-lg p-8" src="../images/image16.png" alt="product16" />
-				</a>
-				<div class="card-content px-5 pb-5">
-					<a href="/">
-						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
-							{product16[0].name}
-						</h5>
-					</a>
-					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
-						<Badge slot="text" class="ms-3">4,2</Badge>
-					</Rating>
-					<div class="card-footer flex items-center justify-between mt-auto">
-						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product16[0].price}</span>
-						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product16[0].id, product16[0].name,product16[0].price)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product16[0].id, product16[0].name,product16[0].price)}>Buy now</button>
-						</div>
-					</div>
-				</div>
-			</Card>
-		</div>
-	</div>
-
-
-	<div class="container1">
-		<div class="grid grid-cols-4 gap-4">
-			<Card padding="none" class="card">
-				<a href="/">
-					<img class="rounded-t-lg p-8" src="../images/image17.png" alt="product17" />
-				</a>
-				<div class="card-content px-5 pb-5">
-					<a href="/">
-						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
-							{product17[0].name}
-						</h5>
-					</a>
-					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
-						<Badge slot="text" class="ms-3">4,2</Badge>
-					</Rating>
-					<div class="card-footer flex items-center justify-between mt-auto">
-						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product17[0].price}</span>
-						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product17[0].id, product17[0].name,product17[0].price)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product17[0].id, product17[0].name,product17[0].price)}>Buy now</button>
-						</div>
-					</div>
-				</div>
-			</Card>
-
-			<Card padding="none" class="card">
-				<a href="/">
-					<img class="rounded-t-lg p-8" src="../images/image18.png" alt="product18" />
-				</a>
-				<div class="card-content px-5 pb-5">
-					<a href="/">
-						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
-							{product18[0].name}
-						</h5>
-					</a>
-					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
-						<Badge slot="text" class="ms-3">4,2</Badge>
-					</Rating>
-					<div class="card-footer flex items-center justify-between mt-auto">
-						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product18[0].price}</span>
-						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product18[0].id, product18[0].name,product18[0].price)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product18[0].id, product18[0].name,product18[0].price)}>Buy now</button>
-						</div>
-					</div>
-				</div>
-			</Card>
-			<Card padding="none" class="card">
-				<a href="/">
-					<img class="rounded-t-lg p-8" src="../images/image19.png" alt="product19" />
-				</a>
-				<div class="card-content px-5 pb-5">
-					<a href="/">
-						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
-							{product19[0].name}
-						</h5>
-					</a>
-					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
-						<Badge slot="text" class="ms-3">4,2</Badge>
-					</Rating>
-					<div class="card-footer flex items-center justify-between mt-auto">
-						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product19[0].price}</span>
-						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product19[0].id, product19[0].name,product19[0].price)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product19[0].id, product19[0].name,product19[0].price)}>Buy now</button>
-						</div>
-					</div>
-				</div>
-			</Card>
-			<Card padding="none" class="card">
-				<a href="/">
-					<img class="rounded-t-lg p-8" src="../images/image20.png" alt="product20" />
-				</a>
-				<div class="card-content px-5 pb-5">
-					<a href="/">
-						<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
-							{product20[0].name}
-						</h5>
-					</a>
-					<Rating rating={4.2} size={24} class="mb-5 mt-2.5">
-						<Badge slot="text" class="ms-3">4,2</Badge>
-					</Rating>
-					<div class="card-footer flex items-center justify-between mt-auto">
-						<span class="text-3xl font-bold text-gray-900 dark:text-white">{product20[0].price}</span>
-						<div class="flex space-x-2">
-							<button class="enter-button1" on:click={() => removeFromCart(product20[0].id, product20[0].name,product20[0].price)}>Delete</button>
-							<button class="enter-button1" on:click={() => addToCart(product20[0].id, product20[0].name,product20[0].price)}>Buy now</button>
-						</div>
-					</div>
-				</div>
-			</Card>
-		</div>
-	</div>
-
-
-
-
-
-
-
-
-
-	
 
 	<div class="flex justify-between ">
-
-
 	<form on:submit|preventDefault={order_handleSubmit}>
 		<label for="order_handleSubmit">Delivery address:</label>
 		<input type="text" id="order_handleSubmit" bind:value={delivery_address} />
@@ -1045,15 +665,16 @@ if(cart.length==0){
 
 
 	<div>
-		<p>{sum} rub</p>
-	<p>
-		
+		<p style="color: red;">{sum} rub</p>
 		{#if cart.length > 0}
-			Your products: {productnames.join(', ')}
+		<ul>
+			{#each productnames as product}
+				<li>{product}</li>
+			{/each}
+		</ul>
 		{:else}
 			Your cart is empty.
 		{/if}
-	</p>
  </div> 
 	
 
@@ -1061,7 +682,7 @@ if(cart.length==0){
 
 
 
- <div>
+ 
  <form on:submit|preventDefault={courier_handleSubmit}>
 	<label for="age">Age:</label>
 	<input type="number" id="age" bind:value={courier_age} />
@@ -1087,12 +708,12 @@ if(cart.length==0){
 
 	<label for="update_courier_active">Active:</label>
 	<input type="text" id="update_courier_active" bind:value={update_courier_active} />
-	<button class="enter-button">Update courier</button>
+	<button class="enter-button">Update courier status</button>
 	{#if update_error_message}
 		<p style="color: red;">{update_error_message}</p>
 	{/if}
  </form>
-</div>
+
 
 
 
@@ -1114,6 +735,61 @@ if(cart.length==0){
 
 
 
+
+
+
+
+
+
+<form on:submit|preventDefault={info_product_handleSubmit}>
+	<label for="info_product_name">Name:</label>
+	<input type="text" id="info_product_name" bind:value={info_product_name} />
+
+		<button class="enter-button">Get info product</button>
+		{#if product_error_info}
+			<p style="color: red;">{product_error_info}</p>
+		{/if}
+</form>
+<div >
+	{#if info_product_data}
+		<p>
+			Product ID: {info_product_data.product_id}, Name: {info_product_data.name}, Price: {info_product_data.price}, Count: {info_product_data.count}
+		</p>
+	{/if}
+</div>
+
+
+<form on:submit|preventDefault={update_product_handleSubmit}>
+	<label for="update_product_id">Product id:</label>
+	<input type="number" id="update_product_id" bind:value={update_product_id} />
+
+	<label for="update_product_name">Name:</label>
+	<input type="text" id="update_product_name" bind:value={update_product_name} />
+
+	<label for="update_product_price">Price:</label>
+	<input type="number" id="update_product_price" bind:value={update_product_price} />
+
+	<label for="update_product_count">Count:</label>
+	<input type="number" id="update_product_count" bind:value={update_product_count} />
+
+	<button class="enter-button">Update product</button>
+	{#if update_product_error_message}
+		<p style="color: red;">{update_product_error_message}</p>
+	{/if}
+ </form>
+
+
+
+
+ <form on:submit|preventDefault={delete_product_handleSubmit}>
+	<label for="delete_product_id">Product id:</label>
+	<input type="number" id="delete_product_id" bind:value={delete_product_id} />
+
+	<button class="enter-button">Delete product</button>
+	{#if delete_product_message}
+		<p style="color: red;">{delete_product_message}</p>
+	{/if}
+ </form>
 
 
 
@@ -1165,13 +841,6 @@ if(cart.length==0){
 		text-align: center;
 	}
 
-	.header1 {
-		padding-left: 100px;
-		font-size: 2em;
-		margin: 0;
-		flex-grow: 1;
-		text-align: center;
-	}
 
 	.text1 {
 		font-size: 1em;
@@ -1187,21 +856,6 @@ if(cart.length==0){
 		text-align: right;
 	}
 
-	.text3 {
-		font-size: 3em;
-		margin: 0;
-		flex-grow: 1;
-		text-align: center;
-		align-items: center;
-	}
-
-	.text4 {
-		position: fixed;
-		font-size: 1em;
-		margin: 0;
-		flex-grow: 2;
-		text-align: center;
-	}
 
 	.text5 {
     font-size: 3em;
@@ -1214,13 +868,6 @@ if(cart.length==0){
 		display: flex;
 		justify-content: flex-end;
 		margin-bottom: 10px;
-	}
-
-	.button-container1 {
-		display: flex;
-		justify-content: flex-end;
-		margin-bottom: 10px;
-		margin-left: 100px;
 	}
 
 	.enter-button {
@@ -1243,22 +890,18 @@ if(cart.length==0){
 		border-right: 1px solid rgb(5, 3, 3);
 		border-left: 1px solid rgb(5, 3, 3);
 	}
-	.card {
-    display: flex;
-    flex-direction: column; /* Располагаем элементы в колонку */
-    height: 100%; /* Задаем высоту карточки */
-}
+
 
 .card-content {
     display: flex;
-    flex-direction: column; /* Располагаем содержимое в колонку */
-    flex-grow: 1; /* Позволяет этому контейнеру занимать оставшееся пространство */
+    flex-direction: column; 
+    flex-grow: 1;
 }
 
 .card-footer {
-    display: flex; /* Используем Flexbox для размещения элементов в строку */
-    justify-content: space-between; /* Размещаем элементы по краям */
-    align-items: center; /* Центрируем элементы по вертикали */
-    margin-top: auto; /* Отталкивает футер вниз */
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center;
+    margin-top: auto; 
 }
 </style>
