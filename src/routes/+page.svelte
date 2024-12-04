@@ -543,7 +543,54 @@ if(cart.length==0){
 	//   });
 	// 	console.log('the component has mounted');
 	//   });
+
+	let ul;
+  	let scrollPosition = 0;
+
+  function handleScroll() {
+    scrollPosition = window.scrollY;
+    if (scrollPosition >=800) {
+      ul.style.position = 'fixed';
+      ul.style.top = '0';
+      ul.style.left = '0'; // Добавлено для позиционирования слева
+    } else {
+      ul.style.position = 'relative';
+      ul.style.top = '';
+      ul.style.left = ''; // Добавлено для позиционирования слева
+    }
+  }
+
+  window.addEventListener('scroll', handleScroll);
+
+
 </script>
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 <div class="colored-gray">
@@ -616,7 +663,35 @@ if(cart.length==0){
 {:else}
 
 
-<div class="container1">
+  
+
+<ul class="w-48 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white sticky top-8">
+	<div>
+	  <p style="color: red;">{sum} rub</p>
+	  {#if cart.length > 0}
+		<ul class="flex flex-col space-y-1"> 
+			{#each productnames as product}
+			<li>{product}</li>
+		  {/each}
+		</ul>
+	  {:else}
+		<p>Your cart is empty.</p>
+	  {/if}
+	  <div class="flex justify-between mt-2"> 
+		<form on:submit|preventDefault={order_handleSubmit}>
+		  <label for="delivery_address">Delivery address:</label>
+		  <input type="text" id="delivery_address" bind:value={delivery_address} class="w-full" /> 
+		  <button class="enter-button mt-2">Create order</button>
+		  {#if order_error}
+			<p style="color: red;">{order_error}</p>
+		  {/if}
+		</form>
+	  </div>
+	</div>
+  </ul>
+
+
+<div class="container1 flex-grow" >
 	<div class="grid grid-cols-4 gap-4">
 	  {#each products as product}
 		<Card padding="none" class="card">
@@ -643,27 +718,73 @@ if(cart.length==0){
 		</Card>
 	  {/each}
 	</div>
-  </div>
+  </div> 
 
-
-
-	<div class="flex justify-between ">
-	<form on:submit|preventDefault={order_handleSubmit}>
-		<label for="order_handleSubmit">Delivery address:</label>
-		<input type="text" id="order_handleSubmit" bind:value={delivery_address} />
-
-		<button class="enter-button">Create order</button>
-		{#if order_error}
+<!-- <ul class="w-48 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white sticky top-8">
+	<div>
+	  <p style="color: red;">{sum} rub</p>
+	  {#if cart.length > 0}
+		<ul class="flex flex-col space-y-1"> 
+			{#each productnames as product}
+			<li>{product}</li>
+		  {/each}
+		</ul>
+	  {:else}
+		<p>Your cart is empty.</p>
+	  {/if}
+	  <div class="flex justify-between mt-2"> 
+		<form on:submit|preventDefault={order_handleSubmit}>
+		  <label for="delivery_address">Delivery address:</label>
+		  <input type="text" id="delivery_address" bind:value={delivery_address} class="w-full" /> 
+		  <button class="enter-button mt-2">Create order</button>
+		  {#if order_error}
 			<p style="color: red;">{order_error}</p>
-		{/if}
-	</form>
+		  {/if}
+		</form>
+	  </div>
+	</div>
+  </ul>
+
+
+<div class="container1 flex-grow" >
+	<div class="grid grid-cols-4 gap-4">
+	  {#each products as product}
+		<Card padding="none" class="card">
+	  <a href="/">
+		<img class="rounded-t-lg p-8" src="{product.image}" alt="product1" />
+	  </a>
+	  <div class="card-content px-5 pb-5 mt-auto">
+		<a href="/">
+		  <h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
+			{product.name}
+		  </h5>
+		</a>
+		<Rating rating={product.rate} size={24} class="mb-5 mt-2.5">
+		  <Badge slot="text" class="ms-3">{product.rate}</Badge>
+		</Rating>
+		<div class="card-footer flex items-center justify-between">
+		  <span class="text-3xl font-bold text-gray-900 dark:text-white float-end">{product.price}</span>
+		  <div class="flex space-x-2 float-end">
+			<button class="enter-button1" on:click={() => removeFromCart(product.id, product.name,product.price)}>Delete</button>
+			<button class="enter-button1" on:click={() => addToCart(product.id, product.name,product.price)}>Buy now</button>
+		  </div>
+		</div>
+	  </div>
+		</Card>
+	  {/each}
+	</div>
+  </div>     -->
+
+
+
+	<div >
 	<div class="button-container">
 		<button class="enter-button" on:click={() => goto('/basket')}>Go to account</button>
 	</div>
 	</div>
-	
 
 
+<!-- 
 	<div>
 		<p style="color: red;">{sum} rub</p>
 		{#if cart.length > 0}
@@ -675,7 +796,7 @@ if(cart.length==0){
 		{:else}
 			Your cart is empty.
 		{/if}
- </div> 
+ </div>  -->
 	
 
 
@@ -904,4 +1025,5 @@ if(cart.length==0){
     align-items: center;
     margin-top: auto; 
 }
+
 </style>

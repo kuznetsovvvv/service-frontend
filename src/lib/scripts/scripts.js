@@ -1,9 +1,9 @@
+
 import { onMount } from 'svelte';
 import { goto } from '$app/navigation';
 import { ArrowRightOutline } from 'flowbite-svelte-icons';
 import { Card, Button, Rating, Badge } from 'flowbite-svelte';
 import { onDestroy } from 'svelte';
-import { userStatus } from '../../lib/store/store.js';
 import { json } from '@sveltejs/kit';
 import { products } from '../../lib/products/products';
 
@@ -12,18 +12,7 @@ import { products } from '../../lib/products/products';
 
 
 
-//логин пользователя
-let phone = '';
-let password = '';
-let register = true;
-let errorMessage = '';
-let responce = '';
 
-$: loggedIn = $userStatus.loggedIn;
-$: storephone = $userStatus.storephone;
-const unsubscribe = userStatus.subscribe((value) => {});
-
-onDestroy(unsubscribe);
 
 function login_validateForm() {
     const phoneRegex = /^[+]?\d{11,12}$/;
@@ -502,7 +491,6 @@ async function delete_product_handleSubmit() {
         delete_product_message = 'An unexpected error occurred.';
     }
 }
-
 
 
 
