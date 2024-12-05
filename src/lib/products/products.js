@@ -3,7 +3,7 @@ export const product1 =
         id: 1,
         name: 'Apple',
         price: 100,
-        image: "../images/image1.png",
+        image: "../images/image1.jpg",
         rate: 4.2
         // добавить image путь и рейтинг +2 поля
     };
@@ -22,7 +22,7 @@ export const product3 =
         id: 3,
         name: 'Bread rifled',
         price: 85,
-        image: "../images/image3.png",
+        image: "../images/image3.jpg",
         rate: 4.8
     };
 
@@ -40,7 +40,7 @@ export const product5 =
         id: 5,
         name: 'Milk',
         price: 90,
-        image: "../images/image5.png",
+        image: "../images/image5.jpg",
         rate: 4.7
     };
 
@@ -67,7 +67,7 @@ export const product8 =
         id: 8,
         name: '10 eggs',
         price: 130,
-        image: "../images/image8.png",
+        image: "../images/image8.jpg",
         rate: 4.2
     };
 

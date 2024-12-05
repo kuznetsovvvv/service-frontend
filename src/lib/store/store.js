@@ -2,25 +2,14 @@ import { writable } from 'svelte/store';
 
 const userStore = writable({
   loggedIn: false,
-  storephone: ''
+  storephone: '',
+  who:''
 });
 
 export const userStatus = {
   subscribe: userStore.subscribe,
-  setLoggedIn: (phone) => userStore.set({ loggedIn: true, storephone: phone }),
-  reset: () => userStore.set({ loggedIn: false, storephone: '' })
+  setLoggedIn: (phone,Who) => userStore.set({ loggedIn: true, storephone: phone,who: Who}),
+  reset: () => userStore.set({ loggedIn: false, storephone: '', who: '' }),
 };
-
-
-
-// const userId = writable({
-// id: ''
-// });
-
-// export const userIdStatus = {
-//   subscribe: userId.subscribe,
-//   addId: (Id) => userId.set({ id: Id }),
-//   UserRemoveSolid: () => userId.set({ id: '' })
-// };
 
 
