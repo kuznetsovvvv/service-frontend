@@ -4,9 +4,7 @@
 	import { onDestroy } from 'svelte';
 	import { userStatus } from '../../lib/store/store.js';
 	import { Card, Button, Rating, Badge } from 'flowbite-svelte';
-	import {
-		update_user_status
-	} from '../../lib/scripts/scripts.js';
+	import { update_user_status } from '../../lib/scripts/scripts.js';
 	$: who = $userStatus.who;
 	$: loggedIn = $userStatus.loggedIn;
 	$: storephone = $userStatus.storephone;
@@ -27,7 +25,7 @@
 		try {
 			if (!storephone) {
 				user_errorMessage_info = 'Phone number is required.';
-				return; // Прерываем выполнение, если номер телефона не задан
+				return; 
 			}
 			const params = new URLSearchParams();
 			params.append('phone', storephone);
@@ -53,18 +51,17 @@
 	let update_error_message = '';
 
 	async function loginuserhandleSubmit() {
-		const result = await update_user_status(update_user_age, update_user_phone,storephone);
+		const result = await update_user_status(update_user_age, update_user_phone, storephone);
 
 		if (!result.success) {
-			update_error_message= result.errorMessage; // Устанавливаем сообщение об ошибке
+			update_error_message = result.errorMessage;
 		} else {
 			userStatus.setLoggedIn(update_user_phone, `${who}`);
-			   update_user_age = '';
-	           update_user_phone = '';
-	           update_error_message = '';
+			update_user_age = '';
+			update_user_phone = '';
+			update_error_message = '';
 		}
 	}
-
 
 	let orders_data = [];
 	let orders_error_message = '';
@@ -110,7 +107,7 @@
 	let order_error = '';
 
 	function cancel_validateForm() {
-		order_error = ''; // Очищаем сообщение об ошибке
+		order_error = ''; 
 
 		if (isNaN(parseInt(cancel_order_id)) || parseInt(cancel_order_id) < 0) {
 			order_error = 'Order id must be a positive number.';
@@ -148,7 +145,6 @@
 	}
 </script>
 
-
 {#if loggedIn == true}
 	<div class="flex justify-between">
 		<div class="button-container">
@@ -177,7 +173,7 @@
 			<input type="text" id="update_user_phone" bind:value={update_user_phone} />
 			<button class="enter-button">Update</button>
 			{#if update_error_message}
-				<p style="color: red;">{update_error_message}</p>
+				<p class = "text4" style="color: red;">{update_error_message}</p>
 			{/if}
 		</form>
 	</div>
@@ -243,14 +239,14 @@
 		>
 	</div>
 {:else}
-<p class="text1">You are didnt authorized</p>
-<div class="button-container1">
-	<button class="enter-button" on:click={() => goto('/')}>Go back</button>
-</div>
+	<p class="text1">You are didn't authorized</p>
+	<div class="button-container1">
+		<button class="enter-button" on:click={() => goto('/')}>Go back</button>
+	</div>
 {/if}
 
 <style>
-		.text1 {
+	.text1 {
 		font-size: 1em;
 		margin: 0;
 		flex-grow: 2;
@@ -270,7 +266,7 @@
 	}
 
 	.enter-button {
-		padding: 10px 30px; 
+		padding: 10px 30px;
 		background-color: #2c3726;
 		color: #0dcd17;
 		text-decoration: none;
@@ -281,12 +277,12 @@
 	.container {
 		display: flex;
 		flex-direction: column;
-		justify-content: center; 
-		align-items: center; 
-		height: 180px; 
+		justify-content: center;
+		align-items: center;
+		height: 180px;
 		width: 70%;
-		margin: 0 auto; 
-		border: 1px solid #ccc; 
+		margin: 0 auto;
+		border: 1px solid #ccc;
 	}
 
 	.container1 {
@@ -302,14 +298,14 @@
 	}
 
 	.block {
-		width: 30%; 
-		height: 100%; 
+		width: 30%;
+		height: 100%;
 		background-color: #f0f0f0;
-		margin: 0 1%; 
-		text-align: center; 
+		margin: 0 1%;
+		text-align: center;
 		border: 1px solid #ddd;
-		padding: 20px; 
-		box-sizing: border-box; 
+		padding: 20px;
+		box-sizing: border-box;
 	}
 
 	.text4 {

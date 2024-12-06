@@ -68,7 +68,7 @@
 		const result = await adminhandleSubmit(admin_phone, admin_password);
 
 		if (!result.success) {
-			admin_errorMessage = result.errorMessage; // Устанавливаем сообщение об ошибке
+			admin_errorMessage = result.errorMessage;
 		} else {
 			userStatus.setLoggedIn(admin_phone, 'admin');
 			isadmin = true;
@@ -88,7 +88,7 @@
 		const result = await handleSubmit(phone, password);
 
 		if (!result.success) {
-			errorMessage = result.errorMessage; // Устанавливаем сообщение об ошибке
+			errorMessage = result.errorMessage;
 		} else {
 			userStatus.setLoggedIn(phone, 'user');
 			responce = '';
@@ -160,9 +160,8 @@
 		);
 
 		if (!result.success) {
-			courier_errorMessage = result.errorMessage; // Устанавливаем сообщение об ошибке
+			courier_errorMessage = result.errorMessage;
 		} else {
-			// Очистка полей после успешного добавления
 			courier_age = '';
 			courier_gender = '';
 			courier_phone = '';
@@ -306,23 +305,23 @@
 		}
 	}
 
-	// 	let ul=0;
-	//   	let scrollPosition = 0;
+	let ul;
+	let scrollPosition = 0;
 
-	//   function handleScroll() {
-	//     scrollPosition = window.scrollY;
-	//     if (scrollPosition >=800) {
-	//       ul.style.position = 'fixed';
-	//       ul.style.top = '0';
-	//       ul.style.left = '0'; // Добавлено для позиционирования слева
-	//     } else {
-	//       ul.style.position = 'relative';
-	//       ul.style.top = '';
-	//       ul.style.left = ''; // Добавлено для позиционирования слева
-	//     }
-	//   }
+	function handleScroll() {
+		scrollPosition = window.scrollY;
+		if (scrollPosition > 80) {
+			ul.style.position = 'fixed';
+			ul.style.top = '0';
+			ul.style.left = '0'; 
+		} else {
+			ul.style.position = 'relative';
+			ul.style.top = '';
+			ul.style.left = ''; 
+		}
+	}
 
-	//   window.addEventListener('scroll', handleScroll);
+	window.addEventListener('scroll', handleScroll);
 </script>
 
 <div class="colored-gray">
@@ -362,7 +361,7 @@
 			</div>
 		</div>
 	{:else}
-	{#if Admin == true}
+		{#if Admin == true}
 			<div class="container3">
 				<h1 class="text3">Admin login</h1>
 				<div class="header">
@@ -371,109 +370,89 @@
 						<input class="text1" type="text" bind:value={admin_password} placeholder="Password" />
 						<button class="enter-button" type="submit">Login</button>
 					</form>
-					{#if errorMessage}
-						<p style="color: red;">{errorMessage}</p>
+					{#if admin_errorMessage}
+						<p style="color: red;">{admin_errorMessage}</p>
 					{/if}
 				</div>
 			</div>
-			{:else}
-		<div>
-			<form on:submit|preventDefault={userhandleSubmit}>
-				<div class="text1">
-					<div class="container">
-						<label for="age">Age:</label>
-						<input type="number" id="age" bind:value={user_age} />
+		{:else}
+			<div>
+				<form on:submit|preventDefault={userhandleSubmit}>
+					<div class="text1">
+						<div class="container">
+							<label for="age">Age:</label>
+							<input type="number" id="age" bind:value={user_age} />
 
-						<label for="gender">Gender(m/f):</label>
-						<input type="text" id="gender" bind:value={user_gender} />
+							<label for="gender">Gender(m/f):</label>
+							<input type="text" id="gender" bind:value={user_gender} />
 
-						<label for="phone">Phone:</label>
-						<input type="text" id="phone" bind:value={user_phone} />
+							<label for="phone">Phone:</label>
+							<input type="text" id="phone" bind:value={user_phone} />
 
-						<label for="password">Password:</label>
-						<input type="text" id="password" bind:value={user_password} />
+							<label for="password">Password:</label>
+							<input type="text" id="password" bind:value={user_password} />
 
-						<button class="enter-button">Register me</button>
+							<button class="enter-button">Register me</button>
+						</div>
+						{#if user_errorMessage}
+							<p style="color: red;">{user_errorMessage}</p>
+						{/if}
 					</div>
-					{#if user_errorMessage}
-						<p style="color: red;">{user_errorMessage}</p>
-					{/if}
-				
-				</div>
-			</form>
-		</div>
+				</form>
+			</div>
 		{/if}
-		<div class = "container2">
-		<div class="text1">
-			<button class="enter-button" type="button" on:click={registerClicked}
-				>Back to login</button
-			>
-		</div>
-		<div>
-			<p class="text1">Admin</p>
+		<div class="container2">
 			<div class="text1">
-				<button class="enter-button" type="button" on:click={AdminClicked}>Initialization</button>
+				<button class="enter-button" type="button" on:click={registerClicked}>Back to login</button>
+			</div>
+			<div>
+				<p class="text1">Admin</p>
+				<div class="text1">
+					<button class="enter-button" type="button" on:click={AdminClicked}>Initialization</button>
+				</div>
 			</div>
 		</div>
-	</div>
-		
 	{/if}
 {:else}
-
-
-
-<ul class="w-48 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white sticky top-8">
-	<div>
-	  <p style="color: red;">{sum} rub</p>
-	  {#if cart.length > 0}
-		<ul class="flex flex-col space-y-1"> 
-			{#each productnames as product}
-			<li>{product}</li>
-		  {/each}
-		</ul>
-	  {:else}
-		<p>Your cart is empty.</p>
-	  {/if}
-	  <div class="flex justify-between mt-2"> 
-		<form on:submit|preventDefault={order_handleSubmit}>
-		  <label for="delivery_address">Delivery address:</label>
-		  <input type="text" id="delivery_address" bind:value={delivery_address} class="w-full" /> 
-		  <button class="enter-button mt-2">Create order</button>
-		  {#if order_error}
-			<p style="color: red;">{order_error}</p>
-		  {/if}
-		</form>
-	  </div>
+	<div class="container4">
+		<div class="fixed">
+			<div class="flex">
+				<ul
+					bind:this={ul}
+					class="top-100 absolute left-0 w-48 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+				>
+					<div>
+						<p style="color: red;">{sum} rub</p>
+						{#if cart.length > 0}
+							<ul class="flex flex-col space-y-1">
+								{#each productnames as product}
+									<li>{product}</li>
+								{/each}
+							</ul>
+						{:else}
+							<p>Your cart is empty.</p>
+						{/if}
+						<div class="mt-2 flex justify-between">
+							<form on:submit|preventDefault={order_handleSubmit}>
+								<label for="delivery_address">Delivery address:</label>
+								<input
+									type="text"
+									id="delivery_address"
+									bind:value={delivery_address}
+									class="w-full"
+								/>
+								<button class="enter-button mt-2">Create order</button>
+								{#if order_error}
+									<p style="color: red;">{order_error}</p>
+								{/if}
+							</form>
+						</div>
+					</div>
+				</ul>
+			</div>
+		</div>
 	</div>
-  </ul> 
 
-
-	<!--   
-
-<ul class="w-48 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white sticky top-8">
-	<div>
-	  <p style="color: red;">{sum} rub</p>
-	  {#if cart.length > 0}
-		<ul class="flex flex-col space-y-1"> 
-			{#each productnames as product}
-			<li>{product}</li>
-		  {/each}
-		</ul>
-	  {:else}
-		<p>Your cart is empty.</p>
-	  {/if}
-	  <div class="flex justify-between mt-2"> 
-		<form on:submit|preventDefault={order_handleSubmit}>
-		  <label for="delivery_address">Delivery address:</label>
-		  <input type="text" id="delivery_address" bind:value={delivery_address} class="w-full" /> 
-		  <button class="enter-button mt-2">Create order</button>
-		  {#if order_error}
-			<p style="color: red;">{order_error}</p>
-		  {/if}
-		</form>
-	  </div>
-	</div>
-  </ul> -->
 	<div class="container1 flex-grow">
 		<div class="grid grid-cols-4 gap-4">
 			{#each products as product}
@@ -481,17 +460,17 @@
 					<a href="/">
 						<img class="rounded-t-lg p-8" src={product.image} alt="product1" />
 					</a>
-					
-						<div class="card-footer flex items-center justify-between">
-							<div class="card-content mt-auto px-5 pb-5">
-								<a href="/">
-									<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
-										{product.name}
-									</h5>
-								</a>
-								<Rating rating={product.rate} size={24} class="mb-5 mt-2.5">
-									<Badge slot="text" class="ms-3">{product.rate}</Badge>
-								</Rating>
+
+					<div class="card-footer flex items-center justify-between">
+						<div class="card-content mt-auto px-5 pb-5">
+							<a href="/">
+								<h5 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
+									{product.name}
+								</h5>
+							</a>
+							<Rating rating={product.rate} size={24} class="mb-5 mt-2.5">
+								<Badge slot="text" class="ms-3">{product.rate}</Badge>
+							</Rating>
 							<span class="float-end text-3xl font-bold text-gray-900 dark:text-white"
 								>{product.price}</span
 							>
@@ -513,11 +492,6 @@
 			{/each}
 		</div>
 	</div>
-
-
-
-
-
 
 	<div>
 		<div class="button-container">
@@ -647,21 +621,20 @@
 	}
 
 	.container {
-		padding-top: 200px; 
+		padding-top: 200px;
 	}
 
 	.container1 {
 		padding-left: 200px;
 		padding-right: 200px;
 		padding-bottom: 20px;
-		padding-top: 20px;
 	}
 
 	.container2 {
-		padding-top: 100px; 
+		padding-top: 100px;
 	}
 	.container3 {
-		padding-top: 128px; 
+		padding-top: 128px;
 	}
 	.header {
 		padding-left: 140px;
@@ -669,6 +642,9 @@
 		margin: 0;
 		flex-grow: 1;
 		text-align: center;
+	}
+	.container4 {
+		padding-top: 20px;
 	}
 
 	.text1 {
@@ -704,7 +680,7 @@
 	}
 
 	.enter-button {
-		padding: 10px 30px; 
+		padding: 10px 30px;
 		background-color: #2c3726;
 		color: #0dcd17;
 		text-decoration: none;
@@ -713,7 +689,7 @@
 	}
 
 	.enter-button1 {
-		padding: 0px 3px; 
+		padding: 0px 3px;
 		color: #010101;
 		text-decoration: none;
 		border-radius: 2px;
@@ -736,19 +712,5 @@
 		align-items: center;
 		margin-top: auto;
 	}
-	/* Добавьте этот стиль в ваш CSS файл */
-#cart {
-  position: relative; /* Убедитесь, что корзина изначально относительна */
-}
 
-.sticky {
-  position: sticky;
-  top: 8px; /* Отступ от верхней части окна */
-}
-
-.card {
-  display: flex;
-  flex-direction: column;
-  height: 100%; /* Убедитесь, что карточка занимает всю высоту */
-}
 </style>
