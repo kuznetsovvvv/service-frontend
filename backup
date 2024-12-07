@@ -1,0 +1,486 @@
+--
+-- PostgreSQL database dump
+--
+
+-- Dumped from database version 16.4 (Ubuntu 16.4-0ubuntu0.24.04.2)
+-- Dumped by pg_dump version 16.4
+
+-- Started on 2024-11-28 10:12:46
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- TOC entry 4 (class 2615 OID 2200)
+-- Name: public; Type: SCHEMA; Schema: -; Owner: pg_database_owner
+--
+
+CREATE SCHEMA public;
+
+
+ALTER SCHEMA public OWNER TO pg_database_owner;
+
+--
+-- TOC entry 3452 (class 0 OID 0)
+-- Dependencies: 4
+-- Name: SCHEMA public; Type: COMMENT; Schema: -; Owner: pg_database_owner
+--
+
+COMMENT ON SCHEMA public IS 'standard public schema';
+
+
+SET default_tablespace = '';
+
+SET default_table_access_method = heap;
+
+--
+-- TOC entry 221 (class 1259 OID 16426)
+-- Name: content; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.content (
+    order_id integer,
+    product_id integer
+);
+
+
+ALTER TABLE public.content OWNER TO postgres;
+
+--
+-- TOC entry 220 (class 1259 OID 16423)
+-- Name: courier_actions; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.courier_actions (
+    action character varying(20),
+    order_id integer,
+    courier_id integer
+);
+
+
+ALTER TABLE public.courier_actions OWNER TO postgres;
+
+--
+-- TOC entry 223 (class 1259 OID 24581)
+-- Name: couriers; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.couriers (
+    courier_id integer NOT NULL,
+    age integer,
+    gender character varying(3),
+    phone character varying(20),
+    active character varying(3)
+);
+
+
+ALTER TABLE public.couriers OWNER TO postgres;
+
+--
+-- TOC entry 222 (class 1259 OID 24580)
+-- Name: couriers_courier_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.couriers_courier_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.couriers_courier_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3453 (class 0 OID 0)
+-- Dependencies: 222
+-- Name: couriers_courier_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.couriers_courier_id_seq OWNED BY public.couriers.courier_id;
+
+
+--
+-- TOC entry 225 (class 1259 OID 32780)
+-- Name: orders; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.orders (
+    order_id integer NOT NULL,
+    creation_time character varying(40),
+    "time" character varying(40),
+    delivery_address character varying(80),
+    status character varying(40)
+);
+
+
+ALTER TABLE public.orders OWNER TO postgres;
+
+--
+-- TOC entry 224 (class 1259 OID 32779)
+-- Name: orders_order_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.orders_order_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.orders_order_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3454 (class 0 OID 0)
+-- Dependencies: 224
+-- Name: orders_order_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.orders_order_id_seq OWNED BY public.orders.order_id;
+
+
+--
+-- TOC entry 226 (class 1259 OID 40964)
+-- Name: passwords; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.passwords (
+    phone character varying(20) NOT NULL,
+    password character varying(40) NOT NULL
+);
+
+
+ALTER TABLE public.passwords OWNER TO postgres;
+
+--
+-- TOC entry 218 (class 1259 OID 16411)
+-- Name: products; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.products (
+    product_id integer NOT NULL,
+    name character varying(30),
+    price integer,
+    count integer
+);
+
+
+ALTER TABLE public.products OWNER TO postgres;
+
+--
+-- TOC entry 217 (class 1259 OID 16410)
+-- Name: products_product_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.products_product_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.products_product_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3455 (class 0 OID 0)
+-- Dependencies: 217
+-- Name: products_product_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.products_product_id_seq OWNED BY public.products.product_id;
+
+
+--
+-- TOC entry 219 (class 1259 OID 16420)
+-- Name: user_actions; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.user_actions (
+    action character varying(20),
+    order_id integer,
+    user_id integer
+);
+
+
+ALTER TABLE public.user_actions OWNER TO postgres;
+
+--
+-- TOC entry 216 (class 1259 OID 16404)
+-- Name: users; Type: TABLE; Schema: public; Owner: postgres
+--
+
+CREATE TABLE public.users (
+    user_id integer NOT NULL,
+    age integer,
+    gender character varying(3),
+    phone character varying(20)
+);
+
+
+ALTER TABLE public.users OWNER TO postgres;
+
+--
+-- TOC entry 215 (class 1259 OID 16403)
+-- Name: users_user_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.users_user_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+
+ALTER SEQUENCE public.users_user_id_seq OWNER TO postgres;
+
+--
+-- TOC entry 3456 (class 0 OID 0)
+-- Dependencies: 215
+-- Name: users_user_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.users_user_id_seq OWNED BY public.users.user_id;
+
+
+--
+-- TOC entry 3280 (class 2604 OID 24584)
+-- Name: couriers courier_id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.couriers ALTER COLUMN courier_id SET DEFAULT nextval('public.couriers_courier_id_seq'::regclass);
+
+
+--
+-- TOC entry 3281 (class 2604 OID 32783)
+-- Name: orders order_id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.orders ALTER COLUMN order_id SET DEFAULT nextval('public.orders_order_id_seq'::regclass);
+
+
+--
+-- TOC entry 3279 (class 2604 OID 16414)
+-- Name: products product_id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.products ALTER COLUMN product_id SET DEFAULT nextval('public.products_product_id_seq'::regclass);
+
+
+--
+-- TOC entry 3278 (class 2604 OID 16407)
+-- Name: users user_id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users ALTER COLUMN user_id SET DEFAULT nextval('public.users_user_id_seq'::regclass);
+
+
+--
+-- TOC entry 3441 (class 0 OID 16426)
+-- Dependencies: 221
+-- Data for Name: content; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.content (order_id, product_id) FROM stdin;
+8	18
+8	17
+\.
+
+
+--
+-- TOC entry 3440 (class 0 OID 16423)
+-- Dependencies: 220
+-- Data for Name: courier_actions; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.courier_actions (action, order_id, courier_id) FROM stdin;
+get	2	6
+\.
+
+
+--
+-- TOC entry 3443 (class 0 OID 24581)
+-- Dependencies: 223
+-- Data for Name: couriers; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.couriers (courier_id, age, gender, phone, active) FROM stdin;
+8	45	m	8983434828	+
+1	30	m	89834342	+
+9	34	m	89814556088	+
+10	35	j	79814955394	+
+11	45	j	+79814955399	-
+6	45	m	8983434828	+
+\.
+
+
+--
+-- TOC entry 3445 (class 0 OID 32780)
+-- Dependencies: 225
+-- Data for Name: orders; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.orders (order_id, creation_time, "time", delivery_address, status) FROM stdin;
+3	Fri Nov  8 17:06:44 2024\n	Fri Nov  8 17:06:44 2024\n	Kaliningrad, Gorkovo street, home 23 apartment 89	accepted
+4	Fri Nov  8 17:12:09 2024\n	Fri Nov  8 17:12:09 2024\n	Ruminia	accepted
+5	Sun Nov 10 09:45:30 2024\n	Sun Nov 10 09:45:30 2024\n	Msk, Izmailovskiy prospekt 73/2 763	accepted
+6	Sun Nov 10 09:48:53 2024\n	Sun Nov 10 09:48:53 2024\n	Kaluga, Svarshikov 73/2 763	accepted
+1	2023-10-26 10:00:00	Sun Nov 10 10:00:43 2024\n	ул. Ленина, д. 15	delivered
+2	Fri Nov  8 17:01:52 2024\n	Sun Nov 10 10:30:03 2024\n	Moscow, izmailovskiy prosp 34, house 2	transfer
+7	Sun Nov 10 11:53:21 2024\n	Sun Nov 10 11:53:21 2024\n	kalningrad Pyskhina street	accepted
+8	2024-11-27 14:22:01.88+02	2024-11-27 14:22:01.88+02	ds	accepted
+\.
+
+
+--
+-- TOC entry 3446 (class 0 OID 40964)
+-- Dependencies: 226
+-- Data for Name: passwords; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.passwords (phone, password) FROM stdin;
++79814599012	ires009
++79814599456	orlt32
+\.
+
+
+--
+-- TOC entry 3438 (class 0 OID 16411)
+-- Dependencies: 218
+-- Data for Name: products; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.products (product_id, name, price, count) FROM stdin;
+2	Bread	140	32
+1	Apple	100	20
+5	Milk	80	25
+\.
+
+
+--
+-- TOC entry 3439 (class 0 OID 16420)
+-- Dependencies: 219
+-- Data for Name: user_actions; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.user_actions (action, order_id, user_id) FROM stdin;
+create	7	2
+cancel	7	2
+\.
+
+
+--
+-- TOC entry 3436 (class 0 OID 16404)
+-- Dependencies: 216
+-- Data for Name: users; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+COPY public.users (user_id, age, gender, phone) FROM stdin;
+2	43	j	89814599067
+3	47	m	+79843455988
+4	35	m	+79814599012
+1	40	m	+79814599456
+\.
+
+
+--
+-- TOC entry 3457 (class 0 OID 0)
+-- Dependencies: 222
+-- Name: couriers_courier_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.couriers_courier_id_seq', 42, true);
+
+
+--
+-- TOC entry 3458 (class 0 OID 0)
+-- Dependencies: 224
+-- Name: orders_order_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.orders_order_id_seq', 40, true);
+
+
+--
+-- TOC entry 3459 (class 0 OID 0)
+-- Dependencies: 217
+-- Name: products_product_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.products_product_id_seq', 5, true);
+
+
+--
+-- TOC entry 3460 (class 0 OID 0)
+-- Dependencies: 215
+-- Name: users_user_id_seq; Type: SEQUENCE SET; Schema: public; Owner: postgres
+--
+
+SELECT pg_catalog.setval('public.users_user_id_seq', 5, true);
+
+
+--
+-- TOC entry 3287 (class 2606 OID 24586)
+-- Name: couriers couriers_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.couriers
+    ADD CONSTRAINT couriers_pkey PRIMARY KEY (courier_id);
+
+
+--
+-- TOC entry 3289 (class 2606 OID 32785)
+-- Name: orders orders_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.orders
+    ADD CONSTRAINT orders_pkey PRIMARY KEY (order_id);
+
+
+--
+-- TOC entry 3291 (class 2606 OID 40968)
+-- Name: passwords passwords_phone_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.passwords
+    ADD CONSTRAINT passwords_phone_key UNIQUE (phone);
+
+
+--
+-- TOC entry 3285 (class 2606 OID 16416)
+-- Name: products products_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.products
+    ADD CONSTRAINT products_pkey PRIMARY KEY (product_id);
+
+
+--
+-- TOC entry 3283 (class 2606 OID 16409)
+-- Name: users users_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.users
+    ADD CONSTRAINT users_pkey PRIMARY KEY (user_id);
+
+
+-- Completed on 2024-11-28 10:12:46
+
+--
+-- PostgreSQL database dump complete
+--
+
