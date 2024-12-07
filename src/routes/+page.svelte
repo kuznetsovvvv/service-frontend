@@ -321,7 +321,10 @@
 		}
 	}
 
-	window.addEventListener('scroll', handleScroll);
+	onMount(() => {
+    window.addEventListener('scroll', handleScroll);
+})
+
 </script>
 
 <div class="colored-gray">
@@ -419,8 +422,7 @@
 			<div class="flex">
 				<ul
 					bind:this={ul}
-					class="top-100 absolute left-0 w-48 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-				>
+					class="top-100 absolute left-0 w-48 rounded-lg border border-gray-200 bg-white text-sm font-medium text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white">
 					<div>
 						<p style="color: red;">{sum} rub</p>
 						{#if cart.length > 0}
